@@ -1,0 +1,40 @@
+<view class="login-page">
+  <!-- 顶部装饰 -->
+  <view class="login-header">
+    <view class="logo-area">
+      <view class="logo-icon">📚</view>
+      <text class="app-name">陕西综评单招刷题</text>
+      <text class="app-desc">真题练习 · 全真模考 · 院校查询 · 志愿测评</text>
+    </view>
+  </view>
+
+  <!-- 功能亮点 -->
+  <view class="features">
+    <view class="feature-item">
+      <text class="feature-icon">📝</text>
+      <text class="feature-text">真题刷题</text>
+    </view>
+    <view class="feature-item">
+      <text class="feature-icon">🏆</text>
+      <text class="feature-text">全真模考</text>
+    </view>
+    <view class="feature-item">
+      <text class="feature-icon">🏫</text>
+      <text class="feature-text">院校库</text>
+    </view>
+    <view class="feature-item">
+      <text class="feature-icon">🎯</text>
+      <text class="feature-text">志愿测评</text>
+    </view>
+  </view>
+
+  <!-- 登录按钮 -->
+  <view class="login-actions">
+    <button class="btn-login" bindtap="handleLogin" loading="{{loading}}">
+      微信一键登录
+    </button>
+    <view class="agreement" bindtap="handleAgreement">
+      <text class="agreement-text">登录即表示同意《用户协议》和《隐私政策》</text>
+    </view>
+  </view>
+</view>

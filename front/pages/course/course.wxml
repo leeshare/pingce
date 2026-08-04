@@ -1,0 +1,3 @@
+<view class="page-course">
+  <empty wx:if="{{courses.length === 0}}" text="课程数据准备中" />
+</view>

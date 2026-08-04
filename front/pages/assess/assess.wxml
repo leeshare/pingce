@@ -1,0 +1,7 @@
+<view class="page-assess">
+  <view class="assess-header card">
+    <text class="assess-title">志愿测评</text>
+    <text class="assess-desc">基于成绩和兴趣，推荐匹配院校</text>
+  </view>
+  <view class="assess-tip">功能开发中，敬请期待</view>
+</view>

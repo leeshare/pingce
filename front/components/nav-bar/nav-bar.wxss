@@ -1,0 +1,25 @@
+.nav-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+.nav-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.nav-back {
+  position: absolute;
+  left: 24rpx;
+  font-size: 40rpx;
+}
+
+.nav-title {
+  font-size: 32rpx;
+  font-weight: 600;
+}

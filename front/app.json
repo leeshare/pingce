@@ -1,0 +1,57 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/login/login",
+    "pages/practice/practice",
+    "pages/exam/exam",
+    "pages/wrongbook/wrongbook",
+    "pages/college/college",
+    "pages/college/detail",
+    "pages/assess/assess",
+    "pages/course/course",
+    "pages/mine/mine"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#2B6CB0",
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "陕西综评单招刷题",
+    "backgroundColor": "#F7FAFC",
+    "backgroundTextStyle": "dark",
+    "enablePullDownRefresh": false
+  },
+  "tabBar": {
+    "color": "#718096",
+    "selectedColor": "#2B6CB0",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "assets/icons/home.png",
+        "selectedIconPath": "assets/icons/home-active.png"
+      },
+      {
+        "pagePath": "pages/practice/practice",
+        "text": "刷题",
+        "iconPath": "assets/icons/practice.png",
+        "selectedIconPath": "assets/icons/practice-active.png"
+      },
+      {
+        "pagePath": "pages/wrongbook/wrongbook",
+        "text": "错题",
+        "iconPath": "assets/icons/wrong.png",
+        "selectedIconPath": "assets/icons/wrong-active.png"
+      },
+      {
+        "pagePath": "pages/mine/mine",
+        "text": "我的",
+        "iconPath": "assets/icons/mine.png",
+        "selectedIconPath": "assets/icons/mine-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

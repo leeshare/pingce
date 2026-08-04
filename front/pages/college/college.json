@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "empty": "/components/empty/empty"
+  },
+  "navigationBarTitleText": "院校库"
+}

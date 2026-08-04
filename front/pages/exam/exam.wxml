@@ -1,0 +1,7 @@
+<view class="page-exam">
+  <view class="exam-header card">
+    <text class="exam-title">全真模拟考试</text>
+    <text class="exam-desc">还原真实考试场景，限时作答</text>
+  </view>
+  <view class="exam-tip">功能开发中，敬请期待</view>
+</view>

@@ -1,0 +1,6 @@
+<view class="page-college">
+  <view class="search-bar">
+    <input class="search-input" placeholder="搜索院校名称" value="{{keyword}}" bindinput="onSearchInput" />
+  </view>
+  <empty wx:if="{{colleges.length === 0}}" text="院校数据准备中" />
+</view>

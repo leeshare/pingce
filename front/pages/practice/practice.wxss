@@ -1,0 +1,59 @@
+.page-practice {
+  padding: 24rpx;
+}
+
+.page-title {
+  margin-bottom: 24rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.title-main {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #1A202C;
+}
+
+.title-desc {
+  font-size: 26rpx;
+  color: #718096;
+  margin-top: 8rpx;
+}
+
+.category-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.category-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.category-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #2D3748;
+}
+
+.category-count {
+  font-size: 24rpx;
+  color: #718096;
+  margin-top: 8rpx;
+}
+
+.category-action {
+  display: flex;
+  align-items: center;
+  color: #2B6CB0;
+}
+
+.action-text {
+  font-size: 28rpx;
+}
+
+.arrow {
+  font-size: 36rpx;
+  margin-left: 8rpx;
+}

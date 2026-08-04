@@ -1,0 +1,29 @@
+.page-exam {
+  padding: 24rpx;
+}
+
+.exam-header {
+  text-align: center;
+  padding: 60rpx 32rpx;
+}
+
+.exam-title {
+  display: block;
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #2B6CB0;
+}
+
+.exam-desc {
+  display: block;
+  font-size: 26rpx;
+  color: #718096;
+  margin-top: 16rpx;
+}
+
+.exam-tip {
+  text-align: center;
+  color: #A0AEC0;
+  font-size: 28rpx;
+  padding: 60rpx 0;
+}

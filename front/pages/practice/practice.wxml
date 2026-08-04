@@ -1,0 +1,19 @@
+<view class="page-practice">
+  <view class="page-title">
+    <text class="title-main">刷题练习</text>
+    <text class="title-desc">分类练习 · 巩固提升</text>
+  </view>
+
+  <view class="category-list">
+    <view class="card category-card" wx:for="{{categories}}" wx:key="id" data-id="{{item.id}}" data-name="{{item.name}}" bindtap="handleStart">
+      <view class="category-info">
+        <text class="category-name">{{item.name}}</text>
+        <text class="category-count">{{item.count}} 道题目</text>
+      </view>
+      <view class="category-action">
+        <text class="action-text">开始练习</text>
+        <text class="arrow">›</text>
+      </view>
+    </view>
+  </view>
+</view>

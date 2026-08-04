@@ -1,0 +1,92 @@
+<view class="page-index">
+  <!-- 顶部用户信息 -->
+  <view class="header">
+    <view class="header-bg"></view>
+    <view class="header-content">
+      <block wx:if="{{isLogged}}">
+        <image class="user-avatar" src="{{userInfo.avatar || '/assets/icons/default-avatar.png'}}" mode="aspectFill" />
+        <view class="user-info">
+          <text class="user-name">{{userInfo.nickname}}</text>
+          <view class="user-tag" wx:if="{{userInfo.memberLevel > 0}}">
+            <text class="tag-text">会员</text>
+          </view>
+        </view>
+      </block>
+      <block wx:else>
+        <image class="user-avatar" src="/assets/icons/default-avatar.png" mode="aspectFill" />
+        <view class="user-info" bindtap="handleLogin">
+          <text class="user-name">点击登录</text>
+          <text class="user-desc">登录后享受更多功能</text>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 轮播图 -->
+  <view class="banner-section">
+    <swiper class="banner-swiper" indicator-dots circular autoplay interval="4000">
+      <swiper-item wx:for="{{banners}}" wx:key="id" data-id="{{item.id}}" bindtap="handleBanner">
+        <view class="banner-item">
+          <image class="banner-img" src="{{item.image}}" mode="aspectFill" />
+          <text class="banner-title">{{item.title}}</text>
+        </view>
+      </swiper-item>
+    </swiper>
+  </view>
+
+  <!-- 功能入口 -->
+  <view class="module-section card">
+    <view class="module-grid">
+      <view
+        class="module-item"
+        wx:for="{{modules}}"
+        wx:key="id"
+        data-url="{{item.url}}"
+        data-id="{{item.id}}"
+        bindtap="handleModule"
+      >
+        <view class="module-icon" style="background: {{item.color}}1a;">
+          <text class="icon-emoji">{{item.icon}}</text>
+        </view>
+        <text class="module-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 今日推荐 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">今日推荐</text>
+      <text class="section-more">更多 ></text>
+    </view>
+    <view class="card recommend-card">
+      <view class="recommend-item" wx:for="{{todayQuestions}}" wx:key="id">
+        <text class="recommend-tag tag tag-primary">{{item.category}}</text>
+        <text class="recommend-text">{{item.content}}</text>
+      </view>
+      <view class="empty-placeholder" wx:if="{{todayQuestions.length === 0}}">
+        <text class="empty-hint">暂无推荐题目，敬请期待</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 热门院校 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">热门院校</text>
+      <text class="section-more">更多 ></text>
+    </view>
+    <view class="card college-card">
+      <view class="college-item" wx:for="{{hotColleges}}" wx:key="id">
+        <image class="college-logo" src="{{item.logo || '/assets/icons/college.png'}}" mode="aspectFit" />
+        <view class="college-info">
+          <text class="college-name">{{item.name}}</text>
+          <text class="college-desc">{{item.type}} · {{item.city}}</text>
+        </view>
+      </view>
+      <view class="empty-placeholder" wx:if="{{hotColleges.length === 0}}">
+        <text class="empty-hint">院校数据准备中</text>
+      </view>
+    </view>
+  </view>
+</view>
