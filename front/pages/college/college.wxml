@@ -1,6 +1,106 @@
 <view class="page-college">
-  <view class="search-bar">
-    <input class="search-input" placeholder="搜索院校名称" value="{{keyword}}" bindinput="onSearchInput" />
+  <!-- 搜索框 -->
+  <view class="search-section">
+    <view class="search-box">
+      <text class="search-icon">🔍</text>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="搜索院校名称或专业"
+        value="{{keyword}}"
+        confirm-type="search"
+        bindinput="onSearchInput"
+        bindconfirm="onSearchConfirm"
+      />
+      <text wx:if="{{keyword}}" class="search-clear" bindtap="onSearchClear">✕</text>
+    </view>
+    <!-- 筛选 chip 行 -->
+    <scroll-view class="chip-row" scroll-x>
+      <view
+        class="chip {{item.value ? 'chip-active' : ''}}"
+        wx:for="{{chips}}"
+        wx:key="key"
+        data-key="{{item.key}}"
+        bindtap="onChipTap"
+      >
+        <text>{{item.value || item.label}}</text>
+        <text class="chip-arrow">▾</text>
+      </view>
+    </scroll-view>
   </view>
-  <empty wx:if="{{colleges.length === 0}}" text="院校数据准备中" />
+
+  <!-- 快速筛选 tab -->
+  <view class="tab-bar">
+    <scroll-view class="tab-scroll" scroll-x>
+      <view
+        class="tab {{activeTab === item.key ? 'tab-active' : ''}}"
+        wx:for="{{tabs}}"
+        wx:key="key"
+        data-key="{{item.key}}"
+        bindtap="onTabChange"
+      >
+        {{item.label}}
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 院校列表 -->
+  <view class="list">
+    <view
+      class="college-card"
+      wx:for="{{list}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="goDetail"
+    >
+      <view class="college-top">
+        <view class="college-logo">{{item.initial}}</view>
+        <view class="college-main">
+          <view class="college-title-row">
+            <text class="college-name">{{item.name}}</text>
+            <text class="college-score-tag">2024分数线</text>
+          </view>
+          <view class="college-tags">
+            <text class="college-tag" wx:if="{{item.nature}}">{{item.nature}}</text>
+            <text class="college-tag" wx:if="{{item.isDoubleHigh === 1}}">双高计划</text>
+            <text class="college-tag" wx:if="{{item.type}}">{{item.type}}</text>
+          </view>
+          <view class="college-meta">
+            <text class="meta-item">📍 {{item.city || '陕西'}}</text>
+            <text class="meta-item">📚 {{item.majorCount || 0}}个专业</text>
+          </view>
+        </view>
+      </view>
+      <view class="college-footer">
+        <text class="footer-text">查看详情</text>
+        <text class="footer-arrow">›</text>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty" wx:if="{{!loading && list.length === 0}}">
+      <text class="empty-icon">🏫</text>
+      <text class="empty-text">暂无匹配院校</text>
+    </view>
+
+    <!-- 加载中 -->
+    <view class="loading" wx:if="{{loading}}">
+      <text>加载中...</text>
+    </view>
+
+    <!-- 没有更多 -->
+    <view class="no-more" wx:if="{{!loading && noMore && list.length > 0}}">
+      <text>— 已全部加载 —</text>
+    </view>
+  </view>
+
+  <!-- 智能匹配 CTA -->
+  <view class="match-cta" bindtap="goAssess">
+    <view class="match-icon">✨</view>
+    <view class="match-content">
+      <text class="match-title">智能匹配</text>
+      <text class="match-desc">输入模考成绩，智能推荐院校</text>
+    </view>
+    <text class="match-arrow">→</text>
+  </view>
 </view>

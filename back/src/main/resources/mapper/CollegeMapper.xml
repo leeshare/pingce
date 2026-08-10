@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shaanxi.zhiping.mapper.CollegeMapper">
+
+    <resultMap id="CollegeListVOMap" type="com.shaanxi.zhiping.dto.CollegeListVO">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="nature" column="nature"/>
+        <result property="type" column="type"/>
+        <result property="isDoubleHigh" column="is_double_high"/>
+        <result property="city" column="city"/>
+        <result property="logo" column="logo"/>
+        <result property="majorCount" column="major_count"/>
+        <result property="initial" column="initial"/>
+    </resultMap>
+
+    <select id="selectCollegePage" resultMap="CollegeListVOMap">
+        SELECT
+            c.id,
+            c.name,
+            c.nature,
+            c.type,
+            c.is_double_high,
+            c.city,
+            c.logo,
+            IFNULL(m.major_count, 0) AS major_count,
+            LEFT(c.name, 1) AS initial
+        FROM t_college c
+        LEFT JOIN (
+            SELECT college_id, COUNT(*) AS major_count
+            FROM t_score_line
+            WHERE major IS NOT NULL AND major != ''
+            GROUP BY college_id
+        ) m ON m.college_id = c.id
+        WHERE c.deleted = 0
+        <if test="q.keyword != null and q.keyword != ''">
+            AND c.name LIKE CONCAT('%', #{q.keyword}, '%')
+        </if>
+        <if test="q.city != null and q.city != ''">
+            AND c.city = #{q.city}
+        </if>
+        <if test="q.nature != null and q.nature != ''">
+            AND c.nature = #{q.nature}
+        </if>
+        <if test="q.type != null and q.type != ''">
+            AND c.type = #{q.type}
+        </if>
+        <if test="q.isDoubleHigh != null">
+            AND c.is_double_high = #{q.isDoubleHigh}
+        </if>
+        ORDER BY
+        <choose>
+            <when test="q.recommend != null and q.recommend == 1">
+                c.is_double_high DESC, m.major_count DESC
+            </when>
+            <otherwise>
+                c.id ASC
+            </otherwise>
+        </choose>
+    </select>
+
+</mapper>

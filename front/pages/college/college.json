@@ -1,6 +1,6 @@
 {
-  "usingComponents": {
-    "empty": "/components/empty/empty"
-  },
-  "navigationBarTitleText": "院校库"
+  "usingComponents": {},
+  "navigationBarTitleText": "院校库",
+  "enablePullDownRefresh": true,
+  "backgroundColor": "#f8f9fb"
 }

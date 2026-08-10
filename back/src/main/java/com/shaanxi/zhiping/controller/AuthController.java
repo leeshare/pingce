@@ -40,4 +40,17 @@ public class AuthController {
         Long userId = (Long) request.getAttribute("userId");
         return Result.success(userId);
     }
+
+    /**
+     * 退出登录
+     * 清除 Redis 中的 Session，使 token 立即失效
+     */
+    @PostMapping("/logout")
+    public Result<Boolean> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        String token = authHeader != null && authHeader.startsWith("Bearer ")
+                ? authHeader.substring(7).trim() : null;
+        boolean ok = authService.logout(token);
+        return Result.success(ok);
+    }
 }

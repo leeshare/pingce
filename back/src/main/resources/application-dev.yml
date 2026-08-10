@@ -12,6 +12,19 @@ spring:
       max-lifetime: 1800000
       connection-timeout: 30000
       connection-test-query: SELECT 1
+  # Redis 配置
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    database: 0
+    password:
+    timeout: 3000ms
+    lettuce:
+      pool:
+        max-active: 16
+        max-idle: 8
+        min-idle: 2
+        max-wait: 2000ms
 
 logging:
   level:

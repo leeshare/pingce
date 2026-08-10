@@ -47,12 +47,17 @@ CREATE TABLE IF NOT EXISTS `t_question_category` (
 -- 3. 题目表
 CREATE TABLE IF NOT EXISTS `t_question` (
     `id`            BIGINT       NOT NULL AUTO_INCREMENT,
+    `biz_section`   TINYINT      NOT NULL DEFAULT 1 COMMENT '业务分区 1单招 2普通 3中考 4高考 5考研',
     `category_id`   BIGINT       NOT NULL COMMENT '分类ID',
-    `type`          TINYINT      NOT NULL COMMENT '题型 1单选 2多选 3判断',
+    `parent_id`     BIGINT       NOT NULL DEFAULT 0 COMMENT '父题ID, 0为独立题, 非0为复合题子题',
+    `type`          TINYINT      NOT NULL COMMENT '题型 1单选 2多选 3判断 4填空 5简答 6计算 7复合(大题)',
+    `sub_type`      VARCHAR(32)  DEFAULT NULL COMMENT '子题型, 如"阅读理解-推理判断"',
+    `sort`          INT          NOT NULL DEFAULT 0 COMMENT '排序号',
     `difficulty`    TINYINT      DEFAULT 1 COMMENT '难度 1简单 2中等 3困难',
     `content`       TEXT         NOT NULL COMMENT '题干',
-    `options`       TEXT         NOT NULL COMMENT '选项JSON, 如["A.xxx","B.xxx"]',
-    `answer`        VARCHAR(20)  NOT NULL COMMENT '正确答案, 如 "A" 或 "ABD"',
+    `options`       TEXT         DEFAULT NULL COMMENT '选项JSON, 如["A.xxx","B.xxx"], 非选择题为NULL',
+    `answer`        TEXT         COMMENT '正确答案: 单选"A", 多选"ABD", 填空["答1","答2"], 简答为参考范文',
+    `score`         DECIMAL(5,1) DEFAULT NULL COMMENT '分值',
     `analysis`      TEXT         DEFAULT NULL COMMENT '答案解析',
     `year`          INT          DEFAULT NULL COMMENT '真题年份',
     `source`        VARCHAR(128) DEFAULT NULL COMMENT '来源',
@@ -61,25 +66,32 @@ CREATE TABLE IF NOT EXISTS `t_question` (
     `deleted`       TINYINT      NOT NULL DEFAULT 0,
     PRIMARY KEY (`id`),
     KEY `idx_category` (`category_id`),
-    KEY `idx_year` (`year`)
+    KEY `idx_year` (`year`),
+    KEY `idx_parent` (`parent_id`),
+    KEY `idx_biz_section` (`biz_section`),
+    KEY `idx_section_category` (`biz_section`, `category_id`),
+    KEY `idx_category_diff` (`category_id`, `difficulty`),
+    KEY `idx_created` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='题目表';
 
 -- 4. 试卷表
 CREATE TABLE IF NOT EXISTS `t_paper` (
-    `id`          BIGINT       NOT NULL AUTO_INCREMENT,
-    `title`       VARCHAR(128) NOT NULL COMMENT '试卷名称',
-    `category_id` BIGINT       NOT NULL COMMENT '所属分类',
-    `description` VARCHAR(512) DEFAULT NULL COMMENT '试卷说明',
-    `duration`    INT          NOT NULL DEFAULT 90 COMMENT '考试时长(分钟)',
-    `total_score` INT          NOT NULL DEFAULT 100 COMMENT '总分',
-    `pass_score`  INT          DEFAULT 60 COMMENT '及格分',
-    `question_ids` TEXT       DEFAULT NULL COMMENT '题目ID列表, 逗号分隔',
-    `status`      TINYINT      DEFAULT 0 COMMENT '状态 0草稿 1已发布',
-    `created_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `deleted`     TINYINT      NOT NULL DEFAULT 0,
+    `id`           BIGINT       NOT NULL AUTO_INCREMENT,
+    `biz_section`  TINYINT      NOT NULL DEFAULT 1 COMMENT '业务分区 1单招 2普通 3中考 4高考 5考研',
+    `title`        VARCHAR(128) NOT NULL COMMENT '试卷名称',
+    `category_id`  BIGINT       NOT NULL COMMENT '所属分类',
+    `description`  VARCHAR(512) DEFAULT NULL COMMENT '试卷说明',
+    `duration`     INT          NOT NULL DEFAULT 90 COMMENT '考试时长(分钟)',
+    `total_score`  INT          NOT NULL DEFAULT 100 COMMENT '总分',
+    `pass_score`   INT          DEFAULT 60 COMMENT '及格分',
+    `question_ids` TEXT         DEFAULT NULL COMMENT '题目ID列表, 逗号分隔',
+    `status`       TINYINT      DEFAULT 0 COMMENT '状态 0草稿 1已发布',
+    `created_at`   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted`      TINYINT      NOT NULL DEFAULT 0,
     PRIMARY KEY (`id`),
-    KEY `idx_category` (`category_id`)
+    KEY `idx_category` (`category_id`),
+    KEY `idx_biz_section` (`biz_section`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='试卷表';
 
 -- 5. 刷题记录表
@@ -129,20 +141,24 @@ CREATE TABLE IF NOT EXISTS `t_exam_record` (
 
 -- 8. 院校表
 CREATE TABLE IF NOT EXISTS `t_college` (
-    `id`          BIGINT       NOT NULL AUTO_INCREMENT,
-    `name`        VARCHAR(128) NOT NULL COMMENT '院校名称',
-    `code`        VARCHAR(32)  DEFAULT NULL COMMENT '院校代码',
-    `type`        VARCHAR(32)  DEFAULT NULL COMMENT '院校类型',
-    `level`       VARCHAR(32)  DEFAULT NULL COMMENT '层次 本科/专科',
-    `province`    VARCHAR(32)  DEFAULT NULL COMMENT '省份',
-    `city`        VARCHAR(32)  DEFAULT NULL COMMENT '城市',
-    `logo`        VARCHAR(512) DEFAULT NULL COMMENT '院校logo',
-    `intro`       TEXT         DEFAULT NULL COMMENT '院校简介',
-    `created_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `deleted`     TINYINT      NOT NULL DEFAULT 0,
+    `id`             BIGINT       NOT NULL AUTO_INCREMENT,
+    `name`           VARCHAR(128) NOT NULL COMMENT '院校名称',
+    `code`           VARCHAR(32)  DEFAULT NULL COMMENT '院校代码',
+    `nature`         VARCHAR(16)  DEFAULT NULL COMMENT '办学性质 公办/民办',
+    `type`           VARCHAR(32)  DEFAULT NULL COMMENT '院校类型 综合/理工/师范等',
+    `level`          VARCHAR(32)  DEFAULT NULL COMMENT '层次 本科/专科',
+    `is_double_high` TINYINT      DEFAULT 0 COMMENT '是否双高计划 0否 1是',
+    `province`       VARCHAR(32)  DEFAULT NULL COMMENT '省份',
+    `city`           VARCHAR(32)  DEFAULT NULL COMMENT '城市',
+    `logo`           VARCHAR(512) DEFAULT NULL COMMENT '院校logo',
+    `intro`          TEXT         DEFAULT NULL COMMENT '院校简介',
+    `created_at`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted`        TINYINT      NOT NULL DEFAULT 0,
     PRIMARY KEY (`id`),
-    KEY `idx_province` (`province`)
+    KEY `idx_province` (`province`),
+    KEY `idx_city` (`city`),
+    KEY `idx_nature` (`nature`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='院校表';
 
 -- 9. 院校分数线表

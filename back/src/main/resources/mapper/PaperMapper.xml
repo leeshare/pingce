@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shaanxi.zhiping.mapper.PaperMapper">
+
+    <select id="selectPaperPage" resultType="com.shaanxi.zhiping.entity.Paper">
+        SELECT
+            id, biz_section, title, category_id, description, duration,
+            total_score, pass_score, question_ids, status, created_at, updated_at
+        FROM t_paper
+        WHERE deleted = 0
+        <if test="q.bizSection != null">
+            AND biz_section = #{q.bizSection}
+        </if>
+        <if test="q.categoryId != null">
+            AND category_id = #{q.categoryId}
+        </if>
+        <if test="q.status != null">
+            AND status = #{q.status}
+        </if>
+        <if test="q.keyword != null and q.keyword != ''">
+            AND title LIKE CONCAT('%', #{q.keyword}, '%')
+        </if>
+        ORDER BY id DESC
+    </select>
+
+</mapper>

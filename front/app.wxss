@@ -1,23 +1,60 @@
 /* app.wxss - 全局样式 */
 
-/* 色彩变量 */
+/* 色彩变量（对齐设计图 snx 设计令牌） */
 page {
-  --color-primary: #2B6CB0;
-  --color-primary-light: #3182CE;
-  --color-primary-dark: #2C5282;
-  --color-success: #38A169;
-  --color-danger: #E53E3E;
-  --color-warning: #DD6B20;
-  --color-info: #805AD5;
-  --color-text: #1A202C;
-  --color-text-secondary: #718096;
-  --color-bg: #F7FAFC;
-  --color-border: #E2E8F0;
-  --color-white: #FFFFFF;
+  /* 主色：海军蓝（教育、信任） */
+  --snx-primary-50: #eef4ff;
+  --snx-primary-100: #d9e6ff;
+  --snx-primary-500: #3366ff;
+  --snx-primary-600: #1e4bec;
+  --snx-primary-700: #1539c0;
+
+  /* 中性色 */
+  --snx-neutral-0: #ffffff;
+  --snx-neutral-50: #f8f9fb;
+  --snx-neutral-100: #f1f3f6;
+  --snx-neutral-200: #e3e7ed;
+  --snx-neutral-300: #c9ced7;
+  --snx-neutral-400: #9ca3b0;
+  --snx-neutral-500: #6b7280;
+  --snx-neutral-700: #374151;
+  --snx-neutral-800: #1f2937;
+  --snx-neutral-900: #111827;
+
+  /* 暖色（VIP/奖励） */
+  --snx-warm-100: #ffedd5;
+  --snx-warm-600: #ea580c;
+
+  /* 状态色 */
+  --snx-state-success: #10b981;
+
+  /* 语义别名 */
+  --color-primary: #1e4bec;
+  --color-primary-light: #3366ff;
+  --color-primary-dark: #1539c0;
+  --color-success: #10b981;
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
+  --color-text: #111827;
+  --color-text-secondary: #6b7280;
+  --color-bg: #f8f9fb;
+  --color-card: #ffffff;
+  --color-border: #e3e7ed;
+  --color-white: #ffffff;
+
+  /* 圆角 */
+  --radius-sm: 8rpx;
+  --radius-md: 16rpx;
+  --radius-lg: 24rpx;
+
+  /* 阴影 */
+  --shadow-1: 0 2rpx 4rpx rgba(15, 23, 42, 0.05), 0 2rpx 2rpx rgba(15, 23, 42, 0.03);
+  --shadow-2: 0 8rpx 24rpx -8rpx rgba(15, 23, 42, 0.12);
 
   background-color: var(--color-bg);
   color: var(--color-text);
-  font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif;
+  font-family: 'Inter', 'Noto Sans SC', 'PingFang SC', -apple-system, sans-serif;
   font-size: 28rpx;
   line-height: 1.6;
 }

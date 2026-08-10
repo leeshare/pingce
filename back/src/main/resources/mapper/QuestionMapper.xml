@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shaanxi.zhiping.mapper.QuestionMapper">
+
+    <select id="selectQuestionPage" resultType="com.shaanxi.zhiping.entity.Question">
+        SELECT
+            id, biz_section, category_id, parent_id, type, sub_type, sort,
+            difficulty, content, options, answer, score, analysis, year, source,
+            created_at, updated_at
+        FROM t_question
+        WHERE deleted = 0
+        <if test="q.bizSection != null">
+            AND biz_section = #{q.bizSection}
+        </if>
+        <if test="q.categoryId != null">
+            AND category_id = #{q.categoryId}
+        </if>
+        <if test="q.type != null">
+            AND type = #{q.type}
+        </if>
+        <if test="q.difficulty != null">
+            AND difficulty = #{q.difficulty}
+        </if>
+        <if test="q.parentId != null and q.parentId != -1">
+            AND parent_id = #{q.parentId}
+        </if>
+        <if test="q.parentId != null and q.parentId == -1">
+            AND parent_id = 0
+        </if>
+        <if test="q.year != null">
+            AND year = #{q.year}
+        </if>
+        <if test="q.keyword != null and q.keyword != ''">
+            AND content LIKE CONCAT('%', #{q.keyword}, '%')
+        </if>
+        ORDER BY parent_id ASC, sort ASC, id ASC
+    </select>
+
+</mapper>

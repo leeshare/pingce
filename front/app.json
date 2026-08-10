@@ -20,8 +20,8 @@
     "enablePullDownRefresh": false
   },
   "tabBar": {
-    "color": "#718096",
-    "selectedColor": "#2B6CB0",
+    "color": "#6b7280",
+    "selectedColor": "#1e4bec",
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
@@ -32,16 +32,16 @@
         "selectedIconPath": "assets/icons/home-active.png"
       },
       {
+        "pagePath": "pages/college/college",
+        "text": "院校",
+        "iconPath": "assets/icons/college.png",
+        "selectedIconPath": "assets/icons/college-active.png"
+      },
+      {
         "pagePath": "pages/practice/practice",
         "text": "刷题",
         "iconPath": "assets/icons/practice.png",
         "selectedIconPath": "assets/icons/practice-active.png"
-      },
-      {
-        "pagePath": "pages/wrongbook/wrongbook",
-        "text": "错题",
-        "iconPath": "assets/icons/wrong.png",
-        "selectedIconPath": "assets/icons/wrong-active.png"
       },
       {
         "pagePath": "pages/mine/mine",

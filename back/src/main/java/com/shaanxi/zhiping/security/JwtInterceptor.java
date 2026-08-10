@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shaanxi.zhiping.common.Result;
 import com.shaanxi.zhiping.common.ResultCode;
 import com.shaanxi.zhiping.config.JwtConfig;
+import com.shaanxi.zhiping.service.AuthService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -16,6 +17,11 @@ import java.io.PrintWriter;
 
 /**
  * JWT 拦截器
+ *
+ * 校验流程：
+ * 1. 提取 Authorization 头中的 token
+ * 2. 校验 JWT 签名与过期时间
+ * 3. 校验 Redis Session 是否存在（支持主动失效）
  */
 @Slf4j
 @Component
@@ -29,6 +35,9 @@ public class JwtInterceptor implements HandlerInterceptor {
 
     @Resource
     private ObjectMapper objectMapper;
+
+    @Resource
+    private AuthService authService;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -45,6 +54,13 @@ public class JwtInterceptor implements HandlerInterceptor {
 
         String token = authHeader.substring(jwtConfig.getPrefix().length()).trim();
         if (!jwtUtils.validateToken(token)) {
+            returnUnauthorized(response, ResultCode.TOKEN_INVALID);
+            return false;
+        }
+
+        // 校验 Redis Session（支持退出登录后 token 立即失效）
+        if (!authService.isSessionValid(token)) {
+            log.debug("token Session 已失效（已退出登录或过期）");
             returnUnauthorized(response, ResultCode.TOKEN_INVALID);
             return false;
         }
