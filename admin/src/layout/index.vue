@@ -15,15 +15,41 @@
           <el-icon><Odometer /></el-icon>
           <span>概览</span>
         </el-menu-item>
-        <el-menu-item index="/question/list">
-          <el-icon><Document /></el-icon>
-          <span>题库管理</span>
-        </el-menu-item>
-        <el-menu-item index="/college/list">
+        <el-sub-menu v-if="hasAnyQuestionPerm" index="/question">
+          <template #title>
+            <el-icon><Document /></el-icon>
+            <span>题库中心</span>
+          </template>
+          <el-menu-item v-if="userStore.hasPermission('question:view')" index="/question/view">
+            <el-icon><Reading /></el-icon>
+            <span>试题查看</span>
+          </el-menu-item>
+          <el-menu-item v-if="userStore.hasPermission('question:entry')" index="/question/entry">
+            <el-icon><EditPen /></el-icon>
+            <span>试题录入</span>
+          </el-menu-item>
+          <el-menu-item v-if="userStore.hasPermission('question:import')" index="/question/import">
+            <el-icon><Upload /></el-icon>
+            <span>批量导入</span>
+          </el-menu-item>
+          <el-menu-item v-if="userStore.hasPermission('question:proofread')" index="/question/proofread">
+            <el-icon><View /></el-icon>
+            <span>试题校对</span>
+          </el-menu-item>
+          <el-menu-item v-if="userStore.hasPermission('question:edit')" index="/question/edit">
+            <el-icon><Edit /></el-icon>
+            <span>试题编辑</span>
+          </el-menu-item>
+          <el-menu-item v-if="userStore.hasPermission('question:review')" index="/question/review">
+            <el-icon><Checked /></el-icon>
+            <span>试题审核</span>
+          </el-menu-item>
+        </el-sub-menu>
+        <el-menu-item v-if="userStore.hasPermission('college:list')" index="/college/list">
           <el-icon><School /></el-icon>
           <span>院校管理</span>
         </el-menu-item>
-        <el-menu-item index="/user/list">
+        <el-menu-item v-if="userStore.hasPermission('admin:user:list')" index="/user/list">
           <el-icon><User /></el-icon>
           <span>用户管理</span>
         </el-menu-item>
@@ -38,7 +64,8 @@
         <div class="header-right">
           <el-dropdown @command="handleCommand">
             <span class="user-info">
-              {{ userStore.userInfo?.username || '管理员' }}
+              <el-tag v-if="userStore.isSuper" type="danger" size="small" effect="dark" class="super-tag">超管</el-tag>
+              {{ userStore.userInfo?.nickname || userStore.userInfo?.username || '管理员' }}
               <el-icon><ArrowDown /></el-icon>
             </span>
             <template #dropdown>
@@ -68,9 +95,14 @@ const userStore = useUserStore()
 const activeMenu = computed(() => route.path)
 const pageTitle = computed(() => route.meta.title || '管理后台')
 
-const handleCommand = (cmd) => {
+const QUESTION_PERMS = ['question:view', 'question:entry', 'question:import', 'question:proofread', 'question:edit', 'question:review']
+const hasAnyQuestionPerm = computed(() =>
+  userStore.isSuper || QUESTION_PERMS.some((p) => userStore.hasPermission(p)),
+)
+
+const handleCommand = async (cmd) => {
   if (cmd === 'logout') {
-    userStore.logout()
+    await userStore.logout()
     router.push('/login')
   }
 }
@@ -118,8 +150,12 @@ const handleCommand = (cmd) => {
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     color: #4A5568;
+
+    .super-tag {
+      margin-right: 4px;
+    }
   }
 }
 

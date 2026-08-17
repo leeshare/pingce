@@ -32,11 +32,17 @@ service.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       const userStore = useUserStore()
-      userStore.logout()
-      window.location.href = '/login'
+      userStore.logout().finally(() => {
+        window.location.href = '/login'
+      })
+      return Promise.reject(new Error('登录已过期，请重新登录'))
     }
-    ElMessage.error(error.message || '网络错误')
-    return Promise.reject(error)
+    // 优先取后端业务消息（如"题干与现有题目重复..."），fallback 到 axios 默认 message
+    const bizMsg = error.response?.data?.message
+    const msg = bizMsg || error.message || '网络错误'
+    ElMessage.error(msg)
+    // 抛 Error 实例而非 axios 原始 error 对象，避免 dev-server overlay 显示 [object Object]
+    return Promise.reject(new Error(msg))
   },
 )
 
