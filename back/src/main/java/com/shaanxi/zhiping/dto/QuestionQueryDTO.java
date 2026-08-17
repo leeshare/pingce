@@ -21,6 +21,10 @@ public class QuestionQueryDTO {
     private String keyword;
     /** 真题年份 */
     private Integer year;
+    /** 状态 0草稿 1待审核 2已通过 3已驳回 */
+    private Integer status;
+    /** 批量导入批次ID */
+    private String importBatchId;
     /** 页码 */
     private Integer page = 1;
     /** 每页数量 */

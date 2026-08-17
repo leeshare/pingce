@@ -23,6 +23,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addPathPatterns("/**")
                 .excludePathPatterns(
                         "/auth/**",        // 登录相关接口
+                        "/admin/login",    // 管理后台登录接口
                         "/wx/**",          // 微信回调
                         "/error",          // 错误页
                         "/swagger-ui/**",  // Swagger

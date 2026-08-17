@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shaanxi.zhiping.common.Result;
 import com.shaanxi.zhiping.common.ResultCode;
 import com.shaanxi.zhiping.config.JwtConfig;
+import com.shaanxi.zhiping.service.AdminAuthService;
 import com.shaanxi.zhiping.service.AuthService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -21,7 +22,7 @@ import java.io.PrintWriter;
  * 校验流程：
  * 1. 提取 Authorization 头中的 token
  * 2. 校验 JWT 签名与过期时间
- * 3. 校验 Redis Session 是否存在（支持主动失效）
+ * 3. 区分小程序 / 管理后台 token，校验对应 Redis Session
  */
 @Slf4j
 @Component
@@ -38,6 +39,9 @@ public class JwtInterceptor implements HandlerInterceptor {
 
     @Resource
     private AuthService authService;
+
+    @Resource
+    private AdminAuthService adminAuthService;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -58,7 +62,20 @@ public class JwtInterceptor implements HandlerInterceptor {
             return false;
         }
 
-        // 校验 Redis Session（支持退出登录后 token 立即失效）
+        // 区分管理员 token 与小程序 token
+        if (jwtUtils.isAdminToken(token)) {
+            if (!adminAuthService.isSessionValid(token)) {
+                log.debug("管理员 token Session 已失效");
+                returnUnauthorized(response, ResultCode.TOKEN_INVALID);
+                return false;
+            }
+            Long adminId = jwtUtils.getAdminIdFromToken(token);
+            request.setAttribute("adminId", adminId);
+            request.setAttribute("username", jwtUtils.getUsernameFromToken(token));
+            return true;
+        }
+
+        // 小程序 token 校验
         if (!authService.isSessionValid(token)) {
             log.debug("token Session 已失效（已退出登录或过期）");
             returnUnauthorized(response, ResultCode.TOKEN_INVALID);

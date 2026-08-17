@@ -44,6 +44,9 @@ public class Question {
     /** 题干 */
     private String content;
 
+    /** 题干归一化后的 SHA-1 短哈希(前16位)，用于查重；DB 唯一索引 (content_hash,type,deleted) */
+    private String contentHash;
+
     /** 选项JSON, 如["A.xxx","B.xxx"], 非选择题为NULL */
     private String options;
 
@@ -60,6 +63,21 @@ public class Question {
     private Integer year;
 
     private String source;
+
+    /** 状态 0草稿 1待审核 2已通过 3已驳回 */
+    private Integer status;
+
+    /** 批量导入批次ID */
+    private String importBatchId;
+
+    /** 审核人ID */
+    private Long reviewerId;
+
+    /** 审核备注 */
+    private String reviewRemark;
+
+    /** 审核时间 */
+    private LocalDateTime reviewedAt;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;

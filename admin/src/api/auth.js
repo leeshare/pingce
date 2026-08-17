@@ -16,3 +16,11 @@ export function getInfo() {
     method: 'get',
   })
 }
+
+// 退出登录
+export function logout() {
+  return request({
+    url: '/admin/logout',
+    method: 'post',
+  })
+}

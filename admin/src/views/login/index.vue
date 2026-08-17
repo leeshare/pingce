@@ -43,14 +43,16 @@ const rules = {
 }
 
 const handleLogin = async () => {
-  await formRef.value.validate()
   loading.value = true
   try {
+    // validate 校验失败会 reject，必须放进 try 否则会冒泡触发 dev-server overlay
+    await formRef.value.validate()
     await userStore.login(form)
     ElMessage.success('登录成功')
     router.push('/dashboard')
   } catch (err) {
-    ElMessage.error(err.message || '登录失败')
+    // 校验失败：Element Plus 在表单项上标红，无需额外弹窗
+    // 登录失败：由 request.js 拦截器统一 ElMessage.error 提示，这里不再重复弹
   } finally {
     loading.value = false
   }

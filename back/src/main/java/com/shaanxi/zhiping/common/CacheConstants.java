@@ -50,6 +50,12 @@ public final class CacheConstants {
     /** 微信登录 code 防重放前缀，完整 key: wx:code:{code} */
     public static final String WX_CODE_PREFIX = "wx:code:";
 
+    /** 管理后台会话 token 前缀，完整 key: session:admin:token:{token} */
+    public static final String SESSION_ADMIN_TOKEN_PREFIX = "session:admin:token:";
+
+    /** 管理后台用户信息前缀，完整 key: session:admin:user:{adminId} */
+    public static final String SESSION_ADMIN_USER_PREFIX = "session:admin:user:";
+
     // ==================== TTL（秒） ====================
 
     /** 题目详情缓存 30 分钟 */

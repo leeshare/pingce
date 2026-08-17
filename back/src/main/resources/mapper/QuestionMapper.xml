@@ -7,6 +7,7 @@
         SELECT
             id, biz_section, category_id, parent_id, type, sub_type, sort,
             difficulty, content, options, answer, score, analysis, year, source,
+            status, import_batch_id, reviewer_id, review_remark, reviewed_at,
             created_at, updated_at
         FROM t_question
         WHERE deleted = 0
@@ -30,6 +31,12 @@
         </if>
         <if test="q.year != null">
             AND year = #{q.year}
+        </if>
+        <if test="q.status != null">
+            AND status = #{q.status}
+        </if>
+        <if test="q.importBatchId != null and q.importBatchId != ''">
+            AND import_batch_id = #{q.importBatchId}
         </if>
         <if test="q.keyword != null and q.keyword != ''">
             AND content LIKE CONCAT('%', #{q.keyword}, '%')
