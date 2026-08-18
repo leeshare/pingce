@@ -1,135 +1,185 @@
 <view class="page-home">
-  <!-- 顶部问候 -->
-  <view class="greeting">
-    <view class="greeting-left">
-      <view class="greeting-row">
-        <text class="greeting-title">{{greeting}}，{{nickname}}</text>
-        <view class="vip-badge" wx:if="{{isVip}}">
-          <text class="vip-badge-text">月度会员</text>
-        </view>
+  <!-- 红色头部：副标题 + 通知 + 搜索 -->
+  <view class="home-header">
+    <view class="header-row">
+      <text class="header-sub">陕西 · 单独招生</text>
+      <view class="header-bell" bindtap="goNotice">
+        <image class="header-bell-icon" src="/assets/icons/icon-home-bell.svg" mode="aspectFit"></image>
       </view>
-      <text class="greeting-desc">{{todayTarget}}</text>
+    </view>
+    <view class="header-search" bindtap="goSearch">
+      <image class="header-bell-icon" src="/assets/icons/icon-home-search.svg"></image>
+      <text class="search-text">搜索院校、专业、课程</text>
     </view>
   </view>
 
-  <!-- 数据统计 -->
-  <view class="stats-row">
-    <view class="stat-card">
-      <text class="stat-label">今日刷题</text>
-      <view class="stat-value">
-        <text class="stat-num">{{stats.today}}</text>
-        <text class="stat-unit">道</text>
+  <!-- 顶部公告轮播 -->
+  <view class="ad-wrap">
+    <swiper
+      class="ad-swiper"
+      autoplay
+      circular
+      interval="4000"
+      duration="500"
+      indicator-dots
+      indicator-color="rgba(87,83,78,0.3)"
+      indicator-active-color="rgba(87,83,78,0.7)"
+    >
+      <swiper-item>
+        <view class="ad-card ad-card-amber">
+          <view class="ad-icon-circle ad-icon-amber">
+            <image class="header-bell-icon" src="/assets/icons/icon-home-ad.svg" mode="aspectFit"></image>
+          </view>
+          <view class="ad-content">
+            <text class="ad-title ad-title-amber">平台公告</text>
+            <text class="ad-desc ad-desc-amber">2027 年单招考试押题模拟卷将于 2027 年 1 月 1 日正式发布，敬请期待！</text>
+          </view>
+          <view class="ad-btn ad-btn-amber" catchtap="goSubscribe">提醒我</view>
+        </view>
+      </swiper-item>
+      <swiper-item>
+        <view class="ad-card ad-card-red">
+          <view class="ad-red-top">
+            <view class="ad-icon-circle ad-icon-red">
+              <image class="header-bell-icon" src="/assets/icons/icon-home-crown.svg" mode="aspectFit"></image>
+            </view>
+            <view class="ad-content">
+              <text class="ad-title ad-title-white">重磅：2027 年单招考试押题模拟卷</text>
+              <text class="ad-desc ad-desc-white">将于 2027 年 1 月 1 日正式发布！</text>
+            </view>
+          </view>
+          <view class="ad-red-btn" catchtap="goSubscribe">立即预约</view>
+        </view>
+      </swiper-item>
+    </swiper>
+  </view>
+
+  <!-- 考试倒计时卡片 -->
+  <view class="countdown-card">
+    <view class="countdown-top">
+      <view class="countdown-info">
+        <text class="countdown-label">距 2027 年单招考试</text>
+        <text class="countdown-num">还有 {{examDaysLeft}} 天</text>
+        <text class="countdown-desc">今日完成 {{stats.today}} 题 · 击败 {{beatPercent}}% 学员</text>
+      </view>
+      <view class="countdown-icon">
+        <image class="header-bell-icon" src="/assets/icons/icon-home-calender.svg" mode="aspectFit"></image>
       </view>
     </view>
-    <view class="stat-card">
-      <text class="stat-label">累计刷题</text>
-      <view class="stat-value">
-        <text class="stat-num">{{stats.total}}</text>
-        <text class="stat-unit">道</text>
+    <view class="countdown-actions">
+      <view class="countdown-action countdown-action-primary" bindtap="goPractice">继续练习</view>
+      <view class="countdown-action countdown-action-secondary" bindtap="goHistory">查看计划</view>
+    </view>
+  </view>
+
+  <!-- 开始刷题 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">开始刷题</text>
+      <text class="section-sub">按考试模块练习</text>
+    </view>
+    <view class="practice-grid">
+      <view class="practice-card practice-card-red" bindtap="goPractice">
+        <image class="header-bell-icon" src="/assets/icons/icon-home-question.svg" mode="aspectFit"></image>
+        <text class="practice-name">历年真题</text>
+        <text class="practice-desc">按年份 · 语数英</text>
+      </view>
+      <view class="practice-card practice-card-gray" bindtap="goExam">
+        <image class="header-bell-icon" src="/assets/icons/icon-home-exam.svg" mode="aspectFit"></image>
+        <text class="practice-name">全真模考</text>
+        <text class="practice-desc">语数英 · 智能判卷</text>
       </view>
     </view>
-    <view class="stat-card">
-      <text class="stat-label">正确率</text>
-      <view class="stat-value">
-        <text class="stat-num stat-num-success">{{stats.accuracy}}</text>
-        <text class="stat-unit stat-unit-success">%</text>
+    <view class="quick-grid">
+      <view class="quick-item" bindtap="goWrongBook">
+        <view class="quick-icon-wrap">
+          <image class="header-bell-icon quick-icon" src="/assets/icons/icon-home-s-paper.svg" mode="aspectFit"></image>
+          <view class="quick-badge" wx:if="{{wrongCount > 0}}">{{wrongCount}}</view>
+        </view>
+        <text class="quick-label">错题本</text>
+      </view>
+      <view class="quick-item" bindtap="goKnowledge">
+        <view class="quick-icon-wrap">
+          <image class="header-bell-icon quick-icon" src="/assets/icons/icon-home-s-knowledge.svg" mode="aspectFit"></image>
+          <view class="quick-badge" wx:if="{{knowledgeCount > 0}}">{{knowledgeCount}}</view>
+        </view>
+        <text class="quick-label">知识点</text>
+      </view>
+      <view class="quick-item" bindtap="goFavorite">
+        <view class="quick-icon-wrap">
+          <image class="header-bell-icon quick-icon" src="/assets/icons/icon-home-s-collect.svg" mode="aspectFit"></image>
+          <view class="quick-badge" wx:if="{{favoriteCount > 0}}">{{favoriteCount}}</view>
+        </view>
+        <text class="quick-label">收藏题</text>
       </view>
     </view>
   </view>
 
-  <!-- 主 CTA -->
-  <view class="cta-card">
-    <button class="btn-primary-lg" bindtap="goPractice" hover-class="btn-primary-hover">
-      <text class="btn-primary-text">开始刷题</text>
-    </button>
-    <view class="cta-secondary">
-      <view class="btn-outline-md" bindtap="goExam">
-        <text class="btn-outline-text">全真模考</text>
+  <!-- 面试技巧 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">面试技巧</text>
+      <text class="section-sub">招办老师面对面</text>
+    </view>
+    <view class="interview-card" bindtap="goInterview">
+      <view class="interview-icon">
+        <image class="header-bell-icon quick-icon" src="/assets/icons/icon-home-interview.svg" mode="aspectFit"></image>
       </view>
-      <view class="btn-outline-md" bindtap="goWrongBook">
-        <text class="btn-outline-text">错题本</text>
+      <view class="interview-info">
+        <text class="interview-name">招办老师讲面试</text>
+        <text class="interview-desc">单招面试礼仪 · 高频问题 · 得分技巧</text>
       </view>
+      <text class="interview-arrow">›</text>
     </view>
   </view>
 
-  <!-- 分类入口 -->
-  <view class="category-grid">
-    <view class="category-item" wx:for="{{categories}}" wx:key="id" data-id="{{item.id}}" bindtap="goCategory">
-      <view class="category-icon">
-        <text class="category-icon-emoji">{{item.icon}}</text>
-      </view>
-      <view class="category-info">
-        <text class="category-name">{{item.name}}</text>
-        <text class="category-desc">{{item.desc}}</text>
-      </view>
+  <!-- 学情数据看板 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">学情数据看板</text>
+      <text class="section-week">本周</text>
     </view>
-  </view>
-
-  <!-- 继续学习 -->
-  <view class="continue-card">
-    <view class="card-header">
-      <text class="card-title">继续学习</text>
-      <text class="card-more" bindtap="goHistory">全部记录 ></text>
-    </view>
-    <view class="continue-body" bindtap="goContinue">
-      <view class="continue-icon">
-        <text class="continue-icon-emoji">🔥</text>
-      </view>
-      <view class="continue-content">
-        <view class="continue-top">
-          <text class="continue-title">{{continueLearning.title}}</text>
-          <text class="continue-percent">{{continueLearning.percent}}%</text>
+    <view class="data-card">
+      <view class="data-stats">
+        <view class="data-item">
+          <text class="data-label">累计练习</text>
+          <view class="data-value">
+            <text class="data-num">{{stats.total}}</text>
+            <text class="data-unit">题</text>
+          </view>
         </view>
-        <view class="progress-bar">
-          <view class="progress-inner" style="width: {{continueLearning.percent}}%;"></view>
+        <view class="data-item">
+          <text class="data-label">正确率</text>
+          <view class="data-value">
+            <text class="data-num">{{stats.accuracy}}</text>
+            <text class="data-unit">%</text>
+          </view>
         </view>
-      </view>
-    </view>
-  </view>
-
-  <!-- 升学工具 -->
-  <view class="tools-section">
-    <text class="section-title">升学工具</text>
-    <view class="tools-grid">
-      <view class="tool-item" bindtap="goCollege">
-        <view class="tool-icon">
-          <text class="tool-icon-emoji">🏫</text>
-        </view>
-        <view class="tool-info">
-          <text class="tool-name">院校库</text>
-          <text class="tool-desc">查院校专业</text>
+        <view class="data-item">
+          <text class="data-label">学习时长</text>
+          <view class="data-value">
+            <text class="data-num">{{studyHours}}</text>
+            <text class="data-unit">h</text>
+          </view>
         </view>
       </view>
-      <view class="tool-item" bindtap="goAssess">
-        <view class="tool-icon">
-          <text class="tool-icon-emoji">🎯</text>
-        </view>
-        <view class="tool-info">
-          <text class="tool-name">志愿匹配测评</text>
-          <text class="tool-desc">智能推荐院校</text>
+      <view class="data-progress">
+        <view class="data-progress-inner" style="width: {{stats.accuracy}}%;"></view>
+      </view>
+      <text class="data-tip">{{studyTip}}</text>
+      <view class="subject-list">
+        <view class="subject-item" wx:for="{{subjects}}" wx:key="name">
+          <view class="subject-row">
+            <text class="subject-name">{{item.name}}</text>
+            <text class="subject-percent">{{item.percent}}%</text>
+          </view>
+          <view class="subject-bar">
+            <view class="subject-bar-inner" style="width: {{item.percent}}%;"></view>
+          </view>
         </view>
       </view>
     </view>
   </view>
 
-  <!-- 备考资讯 -->
-  <view class="news-card">
-    <view class="card-header">
-      <text class="card-title">备考资讯</text>
-      <text class="card-more" bindtap="goNews">更多 ></text>
-    </view>
-    <view class="news-list">
-      <view
-        class="news-item"
-        wx:for="{{newsList}}"
-        wx:key="id"
-        data-id="{{item.id}}"
-        bindtap="goNewsDetail"
-      >
-        <view class="news-tag news-tag-{{item.tagType}}">{{item.tag}}</view>
-        <text class="news-title">{{item.title}}</text>
-        <text class="news-arrow">></text>
-      </view>
-    </view>
-  </view>
+  <view class="home-bottom-space"></view>
 </view>

@@ -2,6 +2,7 @@
   "pages": [
     "pages/index/index",
     "pages/login/login",
+    "pages/identity/identity",
     "pages/practice/practice",
     "pages/exam/exam",
     "pages/wrongbook/wrongbook",
@@ -12,42 +13,42 @@
     "pages/mine/mine"
   ],
   "window": {
-    "navigationBarBackgroundColor": "#2B6CB0",
+    "navigationBarBackgroundColor": "#a51d26",
     "navigationBarTextStyle": "white",
-    "navigationBarTitleText": "陕西综评单招刷题",
-    "backgroundColor": "#F7FAFC",
+    "navigationBarTitleText": "陕西单招学习服务平台",
+    "backgroundColor": "#f7f6f3",
     "backgroundTextStyle": "dark",
     "enablePullDownRefresh": false
   },
   "tabBar": {
-    "color": "#6b7280",
-    "selectedColor": "#1e4bec",
+    "color": "#999999",
+    "selectedColor": "#a51d26",
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/index/index",
         "text": "首页",
-        "iconPath": "assets/icons/home.png",
-        "selectedIconPath": "assets/icons/home-active.png"
+        "iconPath": "assets/icons/icon-tab-home.png",
+        "selectedIconPath": "assets/icons/icon-tab-home-active.png"
       },
       {
         "pagePath": "pages/college/college",
         "text": "院校",
-        "iconPath": "assets/icons/college.png",
-        "selectedIconPath": "assets/icons/college-active.png"
+        "iconPath": "assets/icons/icon-tab-college.png",
+        "selectedIconPath": "assets/icons/icon-tab-college-active.png"
       },
       {
         "pagePath": "pages/practice/practice",
         "text": "刷题",
-        "iconPath": "assets/icons/practice.png",
-        "selectedIconPath": "assets/icons/practice-active.png"
+        "iconPath": "assets/icons/icon-tab-course.png",
+        "selectedIconPath": "assets/icons/icon-tab-course-active.png"
       },
       {
         "pagePath": "pages/mine/mine",
         "text": "我的",
-        "iconPath": "assets/icons/mine.png",
-        "selectedIconPath": "assets/icons/mine-active.png"
+        "iconPath": "assets/icons/icon-tab-mine.png",
+        "selectedIconPath": "assets/icons/icon-tab-mine-active.png"
       }
     ]
   },

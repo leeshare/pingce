@@ -16,8 +16,11 @@ CREATE TABLE IF NOT EXISTS `t_user` (
     `avatar`      VARCHAR(512) DEFAULT NULL COMMENT '头像URL',
     `phone`       VARCHAR(20)  DEFAULT NULL COMMENT '手机号',
     `gender`      TINYINT      DEFAULT 0 COMMENT '性别 0未知 1男 2女',
+    `identity`    VARCHAR(20)  DEFAULT NULL COMMENT '考生身份 sanxiao-三校生 putong-普高',
     `province`    VARCHAR(32)  DEFAULT NULL COMMENT '省份',
     `city`        VARCHAR(32)  DEFAULT NULL COMMENT '城市',
+    `district`    VARCHAR(32)  DEFAULT NULL COMMENT '区县',
+    `school`      VARCHAR(128) DEFAULT NULL COMMENT '学校',
     `grade`       VARCHAR(20)  DEFAULT NULL COMMENT '年级',
     `target_major` VARCHAR(64) DEFAULT NULL COMMENT '意向专业',
     `member_level` TINYINT     DEFAULT 0 COMMENT '会员等级 0非会员 1月卡 2季卡 3年卡',
@@ -270,3 +273,22 @@ CREATE TABLE IF NOT EXISTS `t_favorite` (
     UNIQUE KEY `uk_user_target` (`user_id`, `target_type`, `target_id`),
     KEY `idx_user` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='收藏表';
+
+-- 16. 身份修改记录表
+CREATE TABLE IF NOT EXISTS `t_identity_change_record` (
+    `id`              BIGINT       NOT NULL AUTO_INCREMENT,
+    `user_id`         BIGINT       NOT NULL COMMENT '用户ID',
+    `original_identity` VARCHAR(20) DEFAULT NULL COMMENT '原身份类型',
+    `original_province` VARCHAR(32) DEFAULT NULL COMMENT '原省份',
+    `original_city`    VARCHAR(32)  DEFAULT NULL COMMENT '原城市',
+    `original_district` VARCHAR(32) DEFAULT NULL COMMENT '原区县',
+    `original_school`  VARCHAR(128) DEFAULT NULL COMMENT '原学校',
+    `reason`          VARCHAR(512) NOT NULL COMMENT '修改原因',
+    `status`          TINYINT      DEFAULT 0 COMMENT '状态 0待处理 1已通过 2已拒绝',
+    `created_at`      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted`         TINYINT      NOT NULL DEFAULT 0,
+    PRIMARY KEY (`id`),
+    KEY `idx_user` (`user_id`),
+    KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='身份修改记录表';

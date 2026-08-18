@@ -1,40 +1,96 @@
 <view class="login-page">
-  <!-- 顶部装饰 -->
+  <!-- 顶部 Header：红色品牌区 -->
   <view class="login-header">
     <view class="logo-area">
-      <view class="logo-icon">📚</view>
-      <text class="app-name">陕西综评单招刷题</text>
-      <text class="app-desc">真题练习 · 全真模考 · 院校查询 · 志愿测评</text>
+      <image class="logo-icon" src="/assets/icons/logo.png" mode="aspectFit"></image>
+      <text class="app-name">陕西单招学习服务平台</text>
+      <text class="app-desc">陕西综合评价 · 单独招生考试学习助手</text>
     </view>
   </view>
 
-  <!-- 功能亮点 -->
-  <view class="features">
-    <view class="feature-item">
-      <text class="feature-icon">📝</text>
-      <text class="feature-text">真题刷题</text>
-    </view>
-    <view class="feature-item">
-      <text class="feature-icon">🏆</text>
-      <text class="feature-text">全真模考</text>
-    </view>
-    <view class="feature-item">
-      <text class="feature-icon">🏫</text>
-      <text class="feature-text">院校库</text>
-    </view>
-    <view class="feature-item">
-      <text class="feature-icon">🎯</text>
-      <text class="feature-text">志愿测评</text>
-    </view>
-  </view>
+  <!-- 主区域 -->
+  <view class="login-main">
+    <!-- 登录卡片 -->
+    <view class="login-card">
+      <view class="card-title">微信一键登录</view>
+      <view class="card-subtitle">授权微信账户，快速安全登录</view>
 
-  <!-- 登录按钮 -->
-  <view class="login-actions">
-    <button class="btn-login" bindtap="handleLogin" loading="{{loading}}">
-      微信一键登录
-    </button>
-    <view class="agreement" bindtap="handleAgreement">
-      <text class="agreement-text">登录即表示同意《用户协议》和《隐私政策》</text>
+      <!-- 步骤一：微信账号登录 -->
+      <button class="btn-wechat" bindtap="handleLogin" loading="{{loading}}">
+        <image class="btn-icon-img" src="/assets/icons/icon-login-chat.svg" mode="aspectFit"></image>
+        <text class="btn-label">微信账号登录</text>
+      </button>
+
+      <!-- 步骤二：手机号授权（默认隐藏，登录成功后展示） -->
+      <view class="phone-section {{showPhoneSection ? '' : 'hidden'}}">
+        <view class="phone-title">授权读取手机号</view>
+        <view class="phone-subtitle">用于考试通知、成绩推送与客服联系</view>
+
+        <!-- 微信一键授权按钮（有权限时使用） -->
+        <block wx:if="{{!useSmsLogin}}">
+          <button class="btn-phone" open-type="getPhoneNumber" bindgetphonenumber="handleGetPhone">
+            <image class="btn-icon-img" src="/assets/icons/icon-login-phone.svg" mode="aspectFit"></image>
+            <text class="btn-label">微信手机号一键授权</text>
+          </button>
+          <!--<view class="sms-switch" bindtap="switchToSms">
+            <text>无法使用微信授权？使用</text>
+            <text class="sms-link">手机号验证码</text>
+            <text>登录</text>
+          </view>-->
+        </block>
+
+        <!-- 手机号验证码兜底表单（无 getPhoneNumber 权限时使用） -->
+        <block wx:else>
+          <view class="sms-form">
+            <view class="form-item">
+              <input
+                class="form-input"
+                type="number"
+                maxlength="11"
+                placeholder="请输入手机号"
+                value="{{phone}}"
+                bindinput="onPhoneInput"
+              />
+            </view>
+            <view class="form-item code-item">
+              <input
+                class="form-input"
+                type="number"
+                maxlength="6"
+                placeholder="请输入验证码"
+                value="{{code}}"
+                bindinput="onCodeInput"
+              />
+              <view class="code-btn {{codeCountdown > 0 ? 'disabled' : ''}}" bindtap="sendSmsCode">
+                {{codeCountdown > 0 ? codeCountdown + 's' : '获取验证码'}}
+              </view>
+            </view>
+            <button class="btn-phone" bindtap="handleSmsLogin" loading="{{smsLoading}}">
+              <text class="btn-label">验证并登录</text>
+            </button>
+            <view class="sms-switch" bindtap="switchToWx">
+              <text>使用</text>
+              <text class="sms-link">微信一键授权</text>
+              <text>登录</text>
+            </view>
+          </view>
+        </block>
+      </view>
+    </view>
+
+    <!-- 协议勾选 -->
+    <view class="agreement" bindtap="toggleAgree">
+      <checkbox class="agreement-checkbox" checked="{{agreed}}" color="#a51d26"/>
+      <view class="agreement-content">
+        <view class="agreement-line">
+          <text>我已阅读并同意</text>
+          <text class="agreement-link" catchtap="handleAgreement">《用户服务协议》</text>
+        </view>
+        <view class="agreement-line">
+          <text class="agreement-link" catchtap="handlePrivacy">《隐私政策》</text>
+          <text>及授权获取微信公开信息与手机号。</text>
+        </view>
+      </view>
     </view>
   </view>
 </view>

@@ -2,7 +2,7 @@
   <div class="login-container">
     <div class="login-box">
       <div class="login-header">
-        <h1 class="title">陕西综评单招刷题</h1>
+        <h1 class="title">陕西单招学习服务平台</h1>
         <p class="subtitle">管理后台</p>
       </div>
       <el-form :model="form" :rules="rules" ref="formRef" @keyup.enter="handleLogin">

@@ -2,7 +2,7 @@
   "name": "zhiping-admin",
   "version": "1.0.0",
   "private": true,
-  "description": "陕西综评单招刷题小程序 - 管理后台",
+  "description": "陕西单招学习服务平台 - 管理后台",
   "scripts": {
     "dev": "vue-cli-service serve",
     "build": "vue-cli-service build",

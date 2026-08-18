@@ -7,6 +7,7 @@ Page({
     userInfo: null,
     menus: [
       { id: 'profile', name: '个人资料', icon: '👤', url: '' },
+      { id: 'identity', name: '修改身份', icon: '🎓', url: '/pages/identity/identity' },
       { id: 'member', name: '会员中心', icon: '⭐', url: '' },
       { id: 'order', name: '我的订单', icon: '📋', url: '' },
       { id: 'course', name: '我的课程', icon: '📚', url: '' },
@@ -55,7 +56,11 @@ Page({
   },
 
   handleMenu(e) {
-    const { name } = e.currentTarget.dataset
-    wx.showToast({ title: `${name} 开发中`, icon: 'none' })
+    const { name, url } = e.currentTarget.dataset
+    if (url) {
+      wx.navigateTo({ url })
+    } else {
+      wx.showToast({ title: `${name} 开发中`, icon: 'none' })
+    }
   },
 })

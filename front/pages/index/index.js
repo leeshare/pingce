@@ -12,6 +12,15 @@ function buildGreeting() {
   return '晚上好'
 }
 
+// 距目标考试日期的天数
+function daysUntil(dateStr) {
+  const target = new Date(dateStr + 'T00:00:00')
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+  const diff = Math.ceil((target - now) / (24 * 60 * 60 * 1000))
+  return diff > 0 ? diff : 0
+}
+
 Page({
   data: {
     greeting: '早上好',
@@ -23,6 +32,19 @@ Page({
       total: 0,
       accuracy: 0,
     },
+    // 设计稿新增字段
+    examDaysLeft: 0,
+    beatPercent: 62,
+    wrongCount: 23,
+    knowledgeCount: 56,
+    favoriteCount: 8,
+    studyHours: 32.5,
+    studyTip: '语文进步明显，建议强化数学基础模块。',
+    subjects: [
+      { name: '语文', percent: 82 },
+      { name: '数学', percent: 68 },
+      { name: '英语', percent: 74 },
+    ],
     categories: [
       { id: 'pga', name: '普高综评', desc: '职业适应性测试', icon: '🎓' },
       { id: 'sanxiao', name: '三校生单招', desc: '职业技能测试', icon: '🔧' },
@@ -41,15 +63,20 @@ Page({
   },
 
   onLoad() {
-    this.setData({ greeting: buildGreeting() })
+    this.setData({
+      greeting: buildGreeting(),
+      examDaysLeft: daysUntil('2027-04-10'),
+    })
     this.refreshUserState()
   },
 
   onShow() {
-    this.refreshUserState()
-    if (isLoggedIn()) {
-      this.loadHomeStats()
+    if (!isLoggedIn()) {
+      wx.reLaunch({ url: '/pages/login/login' })
+      return
     }
+    this.refreshUserState()
+    this.loadHomeStats()
   },
 
   // 刷新登录状态与昵称
@@ -151,5 +178,41 @@ Page({
   goNewsDetail(e) {
     const { id } = e.currentTarget.dataset
     wx.showToast({ title: `资讯 ${id} 即将上线`, icon: 'none' })
+  },
+
+  // 通知中心
+  goNotice() {
+    wx.showToast({ title: '暂无新消息', icon: 'none' })
+  },
+
+  // 搜索
+  goSearch() {
+    wx.showToast({ title: '搜索功能即将上线', icon: 'none' })
+  },
+
+  // 预约/订阅押题模拟卷
+  goSubscribe() {
+    wx.showToast({ title: '已订阅发布提醒', icon: 'none' })
+  },
+
+  // 知识点
+  goKnowledge() {
+    this.ensureLogin(() =>
+      wx.showToast({ title: '知识点目录即将上线', icon: 'none' }),
+    )
+  },
+
+  // 收藏题
+  goFavorite() {
+    this.ensureLogin(() =>
+      wx.showToast({ title: '收藏题即将上线', icon: 'none' }),
+    )
+  },
+
+  // 面试技巧课程
+  goInterview() {
+    this.ensureLogin(() =>
+      wx.switchTab({ url: '/pages/practice/practice' }),
+    )
   },
 })
