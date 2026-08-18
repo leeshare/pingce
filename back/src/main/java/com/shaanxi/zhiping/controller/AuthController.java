@@ -1,7 +1,10 @@
 package com.shaanxi.zhiping.controller;
 
 import com.shaanxi.zhiping.common.Result;
+import com.shaanxi.zhiping.dto.IdentityChangeDTO;
 import com.shaanxi.zhiping.dto.LoginVO;
+import com.shaanxi.zhiping.dto.UserIdentityDTO;
+import com.shaanxi.zhiping.dto.UserIdentityVO;
 import com.shaanxi.zhiping.dto.WxLoginDTO;
 import com.shaanxi.zhiping.service.AuthService;
 import lombok.extern.slf4j.Slf4j;
@@ -52,5 +55,28 @@ public class AuthController {
                 ? authHeader.substring(7).trim() : null;
         boolean ok = authService.logout(token);
         return Result.success(ok);
+    }
+
+    @GetMapping("/identity")
+    public Result<UserIdentityVO> getIdentity(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        UserIdentityVO vo = authService.getUserIdentity(userId);
+        return Result.success(vo);
+    }
+
+    @PostMapping("/identity")
+    public Result<Boolean> submitIdentity(@Validated @RequestBody UserIdentityDTO dto,
+                                          HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        authService.updateUserIdentity(userId, dto);
+        return Result.success(true);
+    }
+
+    @PostMapping("/identity-change")
+    public Result<Boolean> submitIdentityChange(@Validated @RequestBody IdentityChangeDTO dto,
+                                                 HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        authService.submitIdentityChange(userId, dto);
+        return Result.success(true);
     }
 }

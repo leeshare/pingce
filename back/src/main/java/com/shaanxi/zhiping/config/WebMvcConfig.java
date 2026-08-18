@@ -22,7 +22,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/**")
                 .excludePathPatterns(
-                        "/auth/**",        // 登录相关接口
+                        "/auth/wx-login",   // 微信登录接口
                         "/admin/login",    // 管理后台登录接口
                         "/wx/**",          // 微信回调
                         "/error",          // 错误页

@@ -6,9 +6,14 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.shaanxi.zhiping.common.CacheConstants;
 import com.shaanxi.zhiping.config.WxMiniAppConfig;
+import com.shaanxi.zhiping.dto.IdentityChangeDTO;
 import com.shaanxi.zhiping.dto.LoginVO;
+import com.shaanxi.zhiping.dto.UserIdentityDTO;
+import com.shaanxi.zhiping.dto.UserIdentityVO;
 import com.shaanxi.zhiping.dto.WxLoginDTO;
+import com.shaanxi.zhiping.entity.IdentityChangeRecord;
 import com.shaanxi.zhiping.entity.User;
+import com.shaanxi.zhiping.mapper.IdentityChangeRecordMapper;
 import com.shaanxi.zhiping.mapper.UserMapper;
 import com.shaanxi.zhiping.security.JwtUtils;
 import com.shaanxi.zhiping.util.RedisUtil;
@@ -37,6 +42,9 @@ public class AuthService {
 
     @Resource
     private UserMapper userMapper;
+
+    @Resource
+    private IdentityChangeRecordMapper identityChangeRecordMapper;
 
     @Resource
     private JwtUtils jwtUtils;
@@ -183,5 +191,57 @@ public class AuthService {
             return false;
         }
         return redisUtil.hasKey(CacheConstants.SESSION_TOKEN_PREFIX + token);
+    }
+
+    public UserIdentityVO getUserIdentity(Long userId) {
+        User user = getCurrentUser(userId);
+        if (user == null) {
+            return null;
+        }
+        UserIdentityVO vo = new UserIdentityVO();
+        vo.setIdentity(user.getIdentity());
+        vo.setProvince(user.getProvince());
+        vo.setCity(user.getCity());
+        vo.setDistrict(user.getDistrict());
+        vo.setSchool(user.getSchool());
+        return vo;
+    }
+
+    @Transactional
+    public void updateUserIdentity(Long userId, UserIdentityDTO dto) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+        user.setIdentity(dto.getIdentity());
+        user.setProvince(dto.getProvince());
+        user.setCity(dto.getCity());
+        user.setDistrict(dto.getDistrict());
+        user.setSchool(dto.getSchool());
+        userMapper.updateById(user);
+
+        redisUtil.set(CacheConstants.SESSION_USER_PREFIX + userId, user, CacheConstants.TTL_SESSION);
+        log.info("用户身份已更新, userId={}, identity={}", userId, dto.getIdentity());
+    }
+
+    @Transactional
+    public void submitIdentityChange(Long userId, IdentityChangeDTO dto) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+
+        IdentityChangeRecord record = new IdentityChangeRecord();
+        record.setUserId(userId);
+        record.setOriginalIdentity(user.getIdentity());
+        record.setOriginalProvince(user.getProvince());
+        record.setOriginalCity(user.getCity());
+        record.setOriginalDistrict(user.getDistrict());
+        record.setOriginalSchool(user.getSchool());
+        record.setReason(dto.getReason());
+        record.setStatus(0);
+        identityChangeRecordMapper.insert(record);
+
+        log.info("用户提交身份修改申请, userId={}, reason={}", userId, dto.getReason());
     }
 }

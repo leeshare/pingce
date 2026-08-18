@@ -9,45 +9,28 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-/**
- * 用户实体
- */
 @Data
-@TableName("t_user")
-public class User {
+@TableName("t_identity_change_record")
+public class IdentityChangeRecord {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private String openid;
+    private Long userId;
 
-    private String unionId;
+    private String originalIdentity;
 
-    private String nickname;
+    private String originalProvince;
 
-    private String avatar;
+    private String originalCity;
 
-    private String phone;
+    private String originalDistrict;
 
-    private Integer gender;
+    private String originalSchool;
 
-    private String identity;
+    private String reason;
 
-    private String province;
-
-    private String city;
-
-    private String district;
-
-    private String school;
-
-    private String grade;
-
-    private String targetMajor;
-
-    private Integer memberLevel;
-
-    private LocalDateTime memberExpireTime;
+    private Integer status;
 
     @TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)
     private LocalDateTime createdAt;

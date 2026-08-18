@@ -1,0 +1,329 @@
+.identity-page {
+  min-height: 100vh;
+  background: #f7f6f3;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.identity-header {
+  background: #a51d26;
+  padding: 88rpx 40rpx 40rpx;
+  color: #FFFFFF;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.back-btn {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.back-arrow {
+  font-size: 40rpx;
+  color: #FFFFFF;
+}
+
+.header-title {
+  font-size: 34rpx;
+  font-weight: bold;
+  color: #FFFFFF;
+}
+
+.header-desc {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: #FECACA;
+}
+
+/* 主区域 */
+.identity-main {
+  flex: 1;
+  min-height: 0;
+  padding: 32rpx;
+}
+
+.section {
+  margin-bottom: 40rpx;
+  margin-right: 32px;
+}
+
+.section.hidden {
+  display: none;
+}
+
+.section-label {
+  display: block;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #64748B;
+  margin-bottom: 16rpx;
+}
+
+/* 身份卡片 */
+.identity-card {
+  position: relative;
+  background: #FFFFFF;
+  border: 2rpx solid #E7E5E4;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  display: flex;
+  align-items: flex-start;
+  gap: 24rpx;
+  margin-bottom: 24rpx;
+  transition: all 0.2s;
+}
+
+.identity-card.selected {
+  border-color: #a51d26;
+  background: #FFFBFA;
+}
+
+.identity-radio {
+  margin-top: 4rpx;
+  flex-shrink: 0;
+}
+
+.identity-info {
+  flex: 1;
+}
+
+.identity-name-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.identity-name {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #1E293B;
+}
+
+.identity-tag {
+  font-size: 20rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+}
+
+.tag-red {
+  background: #FEF2F2;
+  color: #a51d26;
+}
+
+.tag-gray {
+  background: #F1F5F9;
+  color: #64748B;
+}
+
+.identity-desc {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #64748B;
+}
+
+.identity-icon {
+  font-size: 48rpx;
+  flex-shrink: 0;
+}
+
+/* 生源地表单 */
+.location-card {
+  background: #FFFFFF;
+  border: 2rpx solid #E7E5E4;
+  border-radius: 24rpx;
+  padding: 24rpx;
+}
+
+.form-row {
+  margin-bottom: 20rpx;
+}
+
+.form-row:last-child {
+  margin-bottom: 0;
+}
+
+.form-label {
+  display: block;
+  font-size: 24rpx;
+  color: #64748B;
+  margin-bottom: 8rpx;
+}
+
+.required {
+  color: #a51d26;
+}
+
+.form-picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #FAFAF9;
+  border: 2rpx solid #E7E5E4;
+  border-radius: 12rpx;
+  padding: 16rpx 20rpx;
+  font-size: 28rpx;
+  color: #1E293B;
+}
+
+.form-picker.placeholder {
+  color: #94A3B8;
+}
+
+.picker-arrow {
+  font-size: 28rpx;
+  color: #94A3B8;
+}
+
+.form-text-input {
+  background: #FAFAF9;
+  border: 2rpx solid #E7E5E4;
+  border-radius: 12rpx;
+  padding: 16rpx 20rpx;
+  font-size: 28rpx;
+  color: #1E293B;
+}
+
+/* 提交按钮 */
+.submit-section {
+  margin-top: 16rpx;
+  margin-bottom: 40rpx;
+}
+
+.btn-submit {
+  width: 100%;
+  background: #a51d26;
+  color: #FFFFFF;
+  font-size: 30rpx;
+  font-weight: 600;
+  border-radius: 20rpx;
+  border: none;
+  padding: 28rpx 0;
+}
+
+.btn-submit::after {
+  border: none;
+}
+
+.btn-submit.disabled {
+  opacity: 0.5;
+}
+
+.submit-tip {
+  display: block;
+  margin-top: 24rpx;
+  text-align: center;
+  font-size: 22rpx;
+  color: #94A3B8;
+}
+
+/* 底部 */
+.footer {
+  padding: 32rpx;
+  text-align: center;
+  background: #FFFFFF;
+  border-top: 2rpx solid #E7E5E4;
+}
+
+.footer-link {
+  font-size: 24rpx;
+  color: #a51d26;
+  font-weight: 500;
+}
+
+/* 弹窗 */
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal-mask.hidden {
+  display: none;
+}
+
+.modal-content {
+  width: 100%;
+  background: #FFFFFF;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 40rpx;
+}
+
+.modal-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #1E293B;
+}
+
+.modal-desc {
+  display: block;
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: #64748B;
+}
+
+.modal-textarea {
+  margin-top: 24rpx;
+  width: 100%;
+  height: 200rpx;
+  background: #FAFAF9;
+  border: 2rpx solid #E7E5E4;
+  border-radius: 24rpx;
+  padding: 24rpx;
+  font-size: 28rpx;
+  color: #1E293B;
+  box-sizing: border-box;
+}
+
+.modal-actions {
+  margin-top: 32rpx;
+  display: flex;
+  gap: 24rpx;
+}
+
+.btn-cancel {
+  flex: 1;
+  background: #FFFFFF;
+  color: #64748B;
+  font-size: 28rpx;
+  font-weight: 500;
+  border-radius: 20rpx;
+  border: 2rpx solid #E7E5E4;
+  padding: 24rpx 0;
+}
+
+.btn-cancel::after {
+  border: none;
+}
+
+.btn-confirm {
+  flex: 1;
+  background: #a51d26;
+  color: #FFFFFF;
+  font-size: 28rpx;
+  font-weight: 500;
+  border-radius: 20rpx;
+  border: none;
+  padding: 24rpx 0;
+}
+
+.btn-confirm::after {
+  border: none;
+}

@@ -1,0 +1,114 @@
+<view class="identity-page">
+  <!-- 顶部 Header -->
+  <view class="identity-header">
+    <view class="header-row">
+      <!--<view class="back-btn" bindtap="goBack">
+        <text class="back-arrow">‹</text>
+      </view>-->
+      <text class="header-title">选择考生身份</text>
+    </view>
+    <text class="header-desc">身份决定后续考试服务与试卷类型</text>
+  </view>
+
+  <!-- 主区域 -->
+  <scroll-view class="identity-main" scroll-y="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
+    <!-- 考生身份选择 -->
+    <view class="section">
+      <text class="section-label">请选择考生身份</text>
+
+      <view class="identity-card {{selectedIdentity === 'sanxiao' ? 'selected' : ''}}" bindtap="selectIdentity" data-id="sanxiao">
+        <radio class="identity-radio" checked="{{selectedIdentity === 'sanxiao'}}" color="#a51d26"/>
+        <view class="identity-info">
+          <view class="identity-name-row">
+            <text class="identity-name">三校生</text>
+            <text class="identity-tag tag-red">乙卷</text>
+          </view>
+          <text class="identity-desc">中专、技校、职高毕业生</text>
+        </view>
+        <text class="identity-icon icon-sanxiao">🏫</text>
+      </view>
+
+      <view class="identity-card {{selectedIdentity === 'putong' ? 'selected' : ''}}" bindtap="selectIdentity" data-id="putong">
+        <radio class="identity-radio" checked="{{selectedIdentity === 'putong'}}" color="#a51d26"/>
+        <view class="identity-info">
+          <view class="identity-name-row">
+            <text class="identity-name">普通高中毕业生</text>
+            <text class="identity-tag tag-gray">甲卷</text>
+          </view>
+          <text class="identity-desc">普通高中应届毕业生或往届生</text>
+        </view>
+        <text class="identity-icon icon-putong">🎓</text>
+        
+      </view>
+    </view>
+
+    <!-- 生源地填写 -->
+    <view class="section {{selectedIdentity ? '' : 'hidden'}}">
+      <text class="section-label">填写生源地</text>
+      <view class="location-card">
+        <!-- 省份 -->
+        <view class="form-row">
+          <text class="form-label">省份</text>
+          <picker mode="selector" range="{{provinceList}}" value="{{provinceIndex}}" bindchange="onProvinceChange">
+            <view class="form-picker">
+              <text>{{provinceList[provinceIndex]}}</text>
+              <text class="picker-arrow">›</text>
+            </view>
+          </picker>
+        </view>
+
+        <!-- 市 -->
+        <view class="form-row">
+          <text class="form-label">市 <text class="required">*</text></text>
+          <picker mode="selector" range="{{cityList}}" value="{{cityIndex}}" bindchange="onCityChange" disabled="{{cityList.length === 0}}">
+            <view class="form-picker {{cityList.length === 0 ? 'placeholder' : ''}}">
+              <text>{{cityList.length > 0 ? cityList[cityIndex] : '请选择市'}}</text>
+              <text class="picker-arrow">›</text>
+            </view>
+          </picker>
+        </view>
+
+        <!-- 区/县 -->
+        <view class="form-row">
+          <text class="form-label">区 / 县 <text class="required">*</text></text>
+          <picker mode="selector" range="{{districtList}}" value="{{districtIndex}}" bindchange="onDistrictChange" disabled="{{districtList.length === 0}}">
+            <view class="form-picker {{districtList.length === 0 ? 'placeholder' : ''}}">
+              <text>{{districtList.length > 0 ? districtList[districtIndex] : '请先选择市'}}</text>
+              <text class="picker-arrow">›</text>
+            </view>
+          </picker>
+        </view>
+
+        <!-- 毕业学校 -->
+        <view class="form-row">
+          <text class="form-label">毕业学校名称（非必填）</text>
+          <input class="form-text-input" placeholder="请填写毕业学校全称" value="{{school}}" bindinput="onSchoolInput"/>
+        </view>
+      </view>
+    </view>
+
+    <!-- 提交按钮 -->
+    <view class="submit-section">
+      <button class="btn-submit" disabled="{{!canSubmit}}" bindtap="submitIdentity">确认身份</button>
+      <text class="submit-tip">身份确认后，平台将匹配对应试卷与服务</text>
+    </view>
+  </scroll-view>
+
+  <!-- 底部修改入口 -->
+  <!--<view class="footer">
+    <text class="footer-link" bindtap="openChangeModal">选错了？申请修改考生身份</text>
+  </view>-->
+
+  <!-- 修改身份弹窗 -->
+  <view class="modal-mask {{showChangeModal ? '' : 'hidden'}}" bindtap="closeChangeModal">
+    <view class="modal-content" catchtap="stopPropagation">
+      <text class="modal-title">申请修改考生身份</text>
+      <text class="modal-desc">每位学生可自主申请修改一次，提交后平台将在 1 个工作日内审核。</text>
+      <textarea class="modal-textarea" placeholder="请说明修改原因及需要变更的身份" value="{{changeReason}}" bindinput="onChangeReasonInput" maxlength="200"/>
+      <view class="modal-actions">
+        <button class="btn-cancel" bindtap="closeChangeModal">取消</button>
+        <button class="btn-confirm" bindtap="submitChange">提交申请</button>
+      </view>
+    </view>
+  </view>
+</view>
