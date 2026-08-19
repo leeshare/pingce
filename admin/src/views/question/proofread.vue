@@ -50,6 +50,17 @@
             <el-option :value="3" label="已驳回" />
           </el-select>
         </el-form-item>
+        <el-form-item label="分类">
+          <el-cascader
+            v-model="categoryCascader"
+            :options="categoryTree"
+            :props="{ value: 'id', label: 'name', children: 'children', checkStrictly: true, emitPath: false }"
+            placeholder="全部"
+            clearable
+            style="width: 120px"
+            @change="onCategoryChange"
+          />
+        </el-form-item>
         <el-form-item label="关键字">
           <el-input v-model="query.keyword" placeholder="题干关键字" clearable @keyup.enter="loadList(1)" />
         </el-form-item>
@@ -117,6 +128,9 @@
           <template #default="{ row }">
             <el-tag :type="typeTagType(row.type)" size="small">{{ typeText(row.type) }}</el-tag>
           </template>
+        </el-table-column>
+        <el-table-column label="分类" width="120" show-overflow-tooltip>
+          <template #default="{ row }">{{ categoryText(row.categoryId) }}</template>
         </el-table-column>
         <el-table-column prop="content" label="题干" min-width="320" show-overflow-tooltip>
           <template #default="{ row }">
@@ -272,10 +286,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Delete, Plus } from '@element-plus/icons-vue'
-import { listForProofread, proofreadSave, updateQuestion, getQuestionStat, getQuestionChildren } from '@/api/question'
+import { listForProofread, proofreadSave, updateQuestion, getQuestionStat, getQuestionChildren, listCategories } from '@/api/question'
 
 const typeOptions = [
   { value: 1, label: '单选题' },
@@ -293,6 +307,7 @@ const query = reactive({
   keyword: '',
   type: null,
   difficulty: null,
+  categoryId: null,
   importBatchId: '',
   status: 0, // 默认查"待校对"（status=0），与统计卡片"待校对"对齐
   page: 1,
@@ -301,6 +316,8 @@ const query = reactive({
 const list = ref([])
 const total = ref(0)
 const tableLoading = ref(false)
+const categoryTree = ref([])
+const categoryCascader = ref(null)
 
 const dialogVisible = ref(false)
 const form = ref(null)
@@ -336,6 +353,60 @@ function parseOptions(question) {
   } catch (e) {
     return []
   }
+}
+
+function buildTree(list) {
+  const map = {}
+  const roots = []
+  list.forEach((i) => {
+    map[i.id] = { id: i.id, name: i.name, parentId: i.parentId, sort: i.sort, children: [] }
+  })
+  list.forEach((i) => {
+    const node = map[i.id]
+    if (!i.parentId || i.parentId === 0) roots.push(node)
+    else if (map[i.parentId]) map[i.parentId].children.push(node)
+    else roots.push(node)
+  })
+  const sortRec = (arr) => {
+    arr.sort((a, b) => (a.sort || 0) - (b.sort || 0))
+    arr.forEach((n) => {
+      if (n.children && n.children.length === 0) delete n.children
+      else if (n.children) sortRec(n.children)
+    })
+  }
+  sortRec(roots)
+  return roots
+}
+
+async function loadCategories() {
+  try {
+    const list = await listCategories()
+    categoryTree.value = buildTree(list || [])
+  } catch (e) {
+    // ignore
+  }
+}
+
+// 扁平化分类树，用于在表格中按 categoryId 显示分类名
+const categoryMap = computed(() => {
+  const map = {}
+  const walk = (nodes) => {
+    ;(nodes || []).forEach((n) => {
+      map[n.id] = n.name
+      if (n.children) walk(n.children)
+    })
+  }
+  walk(categoryTree.value)
+  return map
+})
+
+function categoryText(id) {
+  if (!id) return '-'
+  return categoryMap.value[id] || '-'
+}
+
+function onCategoryChange(val) {
+  query.categoryId = val
 }
 
 // 子题选项支持判断（题型 1单选/2多选/3判断 才有选项）
@@ -404,8 +475,10 @@ function resetQuery() {
   query.keyword = ''
   query.type = null
   query.difficulty = null
+  query.categoryId = null
   query.importBatchId = ''
   query.status = 0
+  categoryCascader.value = null
   loadList(1)
 }
 
@@ -582,6 +655,7 @@ function buildPayload() {
 
 onMounted(() => {
   loadStat()
+  loadCategories()
   loadList(1)
 })
 </script>

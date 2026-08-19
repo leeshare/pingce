@@ -14,6 +14,9 @@ public class QuestionImportBatchQueryDTO {
     /** 状态 0处理中 1成功 2部分失败 3失败 */
     private Integer status;
 
+    /** 分类ID（按批次默认分类过滤） */
+    private Long categoryId;
+
     private Integer page = 1;
 
     private Integer size = 10;

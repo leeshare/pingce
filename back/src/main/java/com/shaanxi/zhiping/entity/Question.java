@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
@@ -85,6 +84,11 @@ public class Question {
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
-    @TableLogic
+    /**
+     * 逻辑删除标志（已废弃，保留只是为了向后兼容历史数据）。
+     * 改为物理删除模型后，主表 t_question 不再有 deleted=1 的记录；
+     * 删除时把行搬到归档表 t_question_deleted 后从主表 DELETE。
+     * 此字段不再参与 MyBatis-Plus 自动过滤（已移除 @TableLogic）。
+     */
     private Integer deleted;
 }

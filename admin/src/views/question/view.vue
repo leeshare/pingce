@@ -14,6 +14,17 @@
             <el-option v-for="o in bizSectionOptions" :key="o.value" :label="o.label" :value="o.value" />
           </el-select>
         </el-form-item>
+        <el-form-item label="分类">
+          <el-cascader
+            v-model="categoryCascader"
+            :options="categoryTree"
+            :props="{ value: 'id', label: 'name', children: 'children', checkStrictly: true, emitPath: false }"
+            placeholder="全部"
+            clearable
+            style="width: 120px"
+            @change="onCategoryChange"
+          />
+        </el-form-item>
         <el-form-item label="题型">
           <el-select v-model="query.type" placeholder="全部" clearable style="width: 120px">
             <el-option v-for="o in typeOptions" :key="o.value" :label="o.label" :value="o.value" />
@@ -90,6 +101,9 @@
             <el-tag :type="typeTagType(row.type)" size="small">{{ typeText(row.type) }}</el-tag>
             <el-tag v-if="row.type === 7" type="danger" size="small" effect="plain" class="composite-tag">复合</el-tag>
           </template>
+        </el-table-column>
+        <el-table-column label="分类" width="120" show-overflow-tooltip>
+          <template #default="{ row }">{{ categoryText(row.categoryId) }}</template>
         </el-table-column>
         <el-table-column prop="content" label="题干" min-width="320" show-overflow-tooltip>
           <template #default="{ row }">
@@ -205,8 +219,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { listForEdit, getQuestionDetail, getQuestionChildren } from '@/api/question'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { listForEdit, getQuestionDetail, getQuestionChildren, listCategories } from '@/api/question'
 
 const bizSectionOptions = [
   { value: 1, label: '单招' },
@@ -228,6 +242,7 @@ const optionLetters = ['A', 'B', 'C', 'D', 'E', 'F']
 
 const query = reactive({
   bizSection: null,
+  categoryId: null,
   type: null,
   difficulty: null,
   status: null,
@@ -239,6 +254,8 @@ const query = reactive({
 const list = ref([])
 const total = ref(0)
 const tableLoading = ref(false)
+const categoryTree = ref([])
+const categoryCascader = ref(null)
 
 const dialogVisible = ref(false)
 const form = ref(null)
@@ -275,6 +292,60 @@ function parseOptions(opts) {
   }
 }
 
+function buildTree(list) {
+  const map = {}
+  const roots = []
+  list.forEach((i) => {
+    map[i.id] = { id: i.id, name: i.name, parentId: i.parentId, sort: i.sort, children: [] }
+  })
+  list.forEach((i) => {
+    const node = map[i.id]
+    if (!i.parentId || i.parentId === 0) roots.push(node)
+    else if (map[i.parentId]) map[i.parentId].children.push(node)
+    else roots.push(node)
+  })
+  const sortRec = (arr) => {
+    arr.sort((a, b) => (a.sort || 0) - (b.sort || 0))
+    arr.forEach((n) => {
+      if (n.children && n.children.length === 0) delete n.children
+      else if (n.children) sortRec(n.children)
+    })
+  }
+  sortRec(roots)
+  return roots
+}
+
+async function loadCategories() {
+  try {
+    const list = await listCategories()
+    categoryTree.value = buildTree(list || [])
+  } catch (e) {
+    // ignore
+  }
+}
+
+// 扁平化分类树，用于在表格中按 categoryId 显示分类名
+const categoryMap = computed(() => {
+  const map = {}
+  const walk = (nodes) => {
+    ;(nodes || []).forEach((n) => {
+      map[n.id] = n.name
+      if (n.children) walk(n.children)
+    })
+  }
+  walk(categoryTree.value)
+  return map
+})
+
+function categoryText(id) {
+  if (!id) return '-'
+  return categoryMap.value[id] || '-'
+}
+
+function onCategoryChange(val) {
+  query.categoryId = val
+}
+
 function rowClassName({ row }) {
   return row.type === 7 ? 'is-composite' : 'no-expand'
 }
@@ -309,11 +380,13 @@ async function loadList(page) {
 
 function resetQuery() {
   query.bizSection = null
+  query.categoryId = null
   query.type = null
   query.difficulty = null
   query.status = null
   query.year = null
   query.keyword = ''
+  categoryCascader.value = null
   loadList(1)
 }
 
@@ -342,6 +415,7 @@ async function openDetail(row) {
 }
 
 onMounted(() => {
+  loadCategories()
   loadList(1)
 })
 </script>

@@ -35,7 +35,8 @@
           <el-col :span="8">
             <el-form-item label="导入后状态">
               <el-select v-model="form.status" style="width: 100%">
-                <el-option :value="1" label="待审核（推荐）" />
+                <el-option :value="0" label="待校对" />
+                <el-option :value="1" label="待审核" />
                 <el-option :value="2" label="直接通过" />
               </el-select>
             </el-form-item>
@@ -71,7 +72,8 @@
             </div>
             <template #tip>
               <div class="upload-tip">
-                仅支持 .xlsx / .xls 格式；首行表头必须为：题型 | 题干 | 选项A | 选项B | 选项C | 选项D | 选项E | 选项F | 正确答案 | 分值 | 难度 | 解析 | 子题型 | 分类ID | 年份 | 来源 | 排序
+                仅支持 .xlsx / .xls 格式；首行表头必须为：题型 | 子题型 | 题干 | 答案 | 解析 | 难度 | 分数 | 选项A | 选项B | 选项C | 选项D | 选项E | (年份 | 来源 | 排序 可选)
+                <br />复合题格式：父行填"题型=复合题 + 题干=语段"，后续子行"题型留空 + 子题型=单选题/简答题等 + 题干=小题"，直至遇到下一个非空"题型"为止。
               </div>
             </template>
           </el-upload>
@@ -132,6 +134,17 @@
             <el-option :value="2" label="部分失败" />
             <el-option :value="3" label="失败" />
           </el-select>
+        </el-form-item>
+        <el-form-item label="分类">
+          <el-cascader
+            v-model="queryCategoryCascader"
+            :options="categoryTree"
+            :props="{ value: 'id', label: 'name', children: 'children', checkStrictly: true, emitPath: false }"
+            placeholder="全部"
+            clearable
+            style="width: 200px"
+            @change="(v) => (query.categoryId = v)"
+          />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="loadBatches(1)">查询</el-button>
@@ -227,16 +240,17 @@ const form = reactive({
   categoryId: null,
   year: new Date().getFullYear(),
   source: '',
-  status: 1,
+  status: 0,
 })
 const categoryCascader = ref(null)
+const queryCategoryCascader = ref(null)
 const categoryTree = ref([])
 const uploadRef = ref(null)
 const file = ref(null)
 const uploadLoading = ref(false)
 const result = ref(null)
 
-const query = reactive({ keyword: '', status: null, page: 1, size: 10 })
+const query = reactive({ keyword: '', status: null, categoryId: null, page: 1, size: 10 })
 const total = ref(0)
 const batchList = ref([])
 const tableLoading = ref(false)
@@ -294,10 +308,33 @@ function buildTree(list) {
   return roots
 }
 
+// 从已加载的分类树中查找"语文"分类，找不到返回 null
+function findDefaultCategoryId() {
+  const walk = (nodes) => {
+    for (const n of nodes || []) {
+      if ((n.name || '').trim() === '语文') return n.id
+      if (n.children) {
+        const r = walk(n.children)
+        if (r) return r
+      }
+    }
+    return null
+  }
+  return walk(categoryTree.value)
+}
+
 async function loadCategories() {
   try {
     const list = await listCategories()
     categoryTree.value = buildTree(list || [])
+    // 默认选中"语文"分类（若存在）
+    if (!form.categoryId) {
+      const id = findDefaultCategoryId()
+      if (id) {
+        form.categoryId = id
+        categoryCascader.value = id
+      }
+    }
   } catch (e) {
     // ignore
   }
@@ -332,9 +369,16 @@ function reset() {
     categoryId: null,
     year: new Date().getFullYear(),
     source: '',
-    status: 1,
+    status: 0,
   })
-  categoryCascader.value = null
+  // 重置后仍保留默认"语文"分类，避免每次导入都要重新选择
+  const id = findDefaultCategoryId()
+  if (id) {
+    form.categoryId = id
+    categoryCascader.value = id
+  } else {
+    categoryCascader.value = null
+  }
   file.value = null
   uploadRef.value?.clearFiles()
   result.value = null
@@ -343,6 +387,8 @@ function reset() {
 function resetQuery() {
   query.keyword = ''
   query.status = null
+  query.categoryId = null
+  queryCategoryCascader.value = null
   loadBatches(1)
 }
 
@@ -371,13 +417,29 @@ async function viewBatch(row) {
 }
 
 function downloadTemplate() {
-  // 模板通过前端生成（避免后端再开一个接口）
-  const headers = ['题型', '题干', '选项A', '选项B', '选项C', '选项D', '选项E', '选项F', '正确答案', '分值', '难度', '解析', '子题型', '分类ID', '年份', '来源', '排序']
+  // 模板通过前端生成，参照 originalRequirement/2025年乙(A)试卷_选项单列格式.xlsx
+  // 列顺序：题型 | 子题型 | 题干 | 答案 | 解析 | 难度 | 分数 | 选项A | 选项B | 选项C | 选项D | 选项E
+  // 复合题：父行 题型=复合题，题干=语段；后续子行 题型留空，子题型=单选题/简答题等
+  const headers = [
+    '题型', '子题型', '题干', '答案', '解析', '难度', '分数',
+    '选项A', '选项B', '选项C', '选项D', '选项E',
+  ]
   const sample = [
-    ['单选题', '下列各组词语中，加点字注音全都正确的一组是（）', '淘冶 蜷缩（quán）', '训戒 收敛（liǎn）', '青睐 铁锹（qiāo）', '熨帖 芭蕉（bā）', '', '', 'A', 3, '中等', '考查字音字形辨析', '', 1, 2025, '2025年乙(A)试卷', 1],
-    ['多选题', '下列关于《红楼梦》的表述，正确的有（）', '贾宝玉是荣国府的嫡孙', '林黛玉是贾母的外孙女', '薛宝钗是王夫人的姨侄女', '史湘云是贾母的侄孙女', '', '', 'ABD', 4, '困难', '考查名著人物关系', '', 1, 2025, '2025年乙(A)试卷', 2],
-    ['判断题', '《静夜思》作者是李白。（）', '', '', '', '', '', '', '正确', 1, '简单', '考查文学常识', '', 1, 2025, '2025年乙(A)试卷', 3],
-    ['填空题', '1. ，谁家新燕啄春泥。(白居易《钱塘湖春行》)', '', '', '', '', '', '', '几处早莺争暖树', 2, '中等', '考查古诗文默写', '', 1, 2025, '2025年乙(A)试卷', 4],
+    // 1) 独立单选题
+    ['单选题', '', '下列各组词语中，加点字的注音全都正确的一组是（）', 'A', '考查字音字形辨析', '中等', 3,
+      '淘冶 蜷缩（quán）', '训戒 收敛（liǎn）', '青睐 铁锹（qiāo）', '熨帖 芭蕉（bā）', ''],
+    // 2) 复合题父行：题型=复合题，题干=语段/材料，答案/选项留空
+    ['复合题', '', '5.阅读语段，按要求完成下面的题目。(7分)\n2025年春晚，魔术《画蛇添福》无疑是最受瞩目的节目之一……', '', '', '', 7,
+      '', '', '', '', ''],
+    // 3) 复合题子行：题型留空，子题型=单选题（作为子题题型），题干=小题题干
+    ['', '单选题', '(1) 依次填入文中括号内的词语，最恰当的一组是（）', 'A', '考查词语辨析', '中等', 2,
+      '精湛巧妙', '精湛灵敏', '精细敏捷', '精深敏捷', ''],
+    // 4) 复合题子行：子题型=简答题
+    ['', '简答题', '(3) 请在文中横线处补写恰当的语句，使整段文字语意连贯，逻辑严密，不超过20个字。', '参考答案：此处应填…', '考查语言运用', '中等', 3,
+      '', '', '', '', ''],
+    // 5) 独立填空题（结束上一个复合题上下文：题型非空）
+    ['填空题', '', '1.几处早莺争暖树，____。', '谁家新燕啄春泥', '考查古诗文默写（白居易《钱塘湖春行》）', '中等', 2,
+      '', '', '', '', ''],
   ]
   const csv = [headers, ...sample]
     .map((row) => row.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(','))
@@ -392,7 +454,7 @@ function downloadTemplate() {
   a.click()
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
-  ElMessage.success('模板已下载（请使用 Excel 打开并另存为 .xlsx 格式后使用）')
+  ElMessage.success('模板已下载（请使用 Excel 打开并按需另存为 .xlsx 后使用）')
 }
 
 onMounted(() => {

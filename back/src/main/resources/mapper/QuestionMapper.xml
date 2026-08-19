@@ -10,8 +10,8 @@
             status, import_batch_id, reviewer_id, review_remark, reviewed_at,
             created_at, updated_at
         FROM t_question
-        WHERE deleted = 0
-        <if test="q.bizSection != null">
+        <where>
+            <if test="q.bizSection != null">
             AND biz_section = #{q.bizSection}
         </if>
         <if test="q.categoryId != null">
@@ -41,7 +41,40 @@
         <if test="q.keyword != null and q.keyword != ''">
             AND content LIKE CONCAT('%', #{q.keyword}, '%')
         </if>
+        </where>
         ORDER BY parent_id ASC, sort ASC, id ASC
+    </select>
+
+    <!-- 物理删除：绕过 MyBatis-Plus 全局逻辑删除配置 -->
+    <delete id="physicalDeleteByIds" parameterType="java.util.List">
+        DELETE FROM t_question WHERE id IN
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 物理查询：绕过 MyBatis-Plus 全局逻辑删除配置的 selectById -->
+    <select id="physicalSelectById" parameterType="java.lang.Long"
+            resultType="com.shaanxi.zhiping.entity.Question">
+        SELECT
+            id, biz_section, category_id, parent_id, type, sub_type, sort,
+            difficulty, content, content_hash, options, answer, score, analysis,
+            year, source, status, import_batch_id, reviewer_id, review_remark,
+            reviewed_at, created_at, updated_at, deleted
+        FROM t_question
+        WHERE id = #{id}
+    </select>
+
+    <!-- 物理查询：按 parent_id 查所有子题（含 deleted=1） -->
+    <select id="physicalSelectByParentId" parameterType="java.lang.Long"
+            resultType="com.shaanxi.zhiping.entity.Question">
+        SELECT
+            id, biz_section, category_id, parent_id, type, sub_type, sort,
+            difficulty, content, content_hash, options, answer, score, analysis,
+            year, source, status, import_batch_id, reviewer_id, review_remark,
+            reviewed_at, created_at, updated_at, deleted
+        FROM t_question
+        WHERE parent_id = #{parentId}
     </select>
 
 </mapper>

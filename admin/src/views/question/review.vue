@@ -60,6 +60,17 @@
             <el-option :value="3" label="已驳回" />
           </el-select>
         </el-form-item>
+        <el-form-item label="分类">
+          <el-cascader
+            v-model="categoryCascader"
+            :options="categoryTree"
+            :props="{ value: 'id', label: 'name', children: 'children', checkStrictly: true, emitPath: false }"
+            placeholder="全部"
+            clearable
+            style="width: 120px"
+            @change="onCategoryChange"
+          />
+        </el-form-item>
         <el-form-item label="题型">
           <el-select v-model="query.type" placeholder="全部" clearable style="width: 130px">
             <el-option v-for="o in typeOptions" :key="o.value" :label="o.label" :value="o.value" />
@@ -120,6 +131,9 @@
             <el-tag :type="typeTagType(row.type)" size="small">{{ typeText(row.type) }}</el-tag>
             <el-tag v-if="row.type === 7" type="danger" size="small" effect="plain" class="composite-tag">复合</el-tag>
           </template>
+        </el-table-column>
+        <el-table-column label="分类" width="120" show-overflow-tooltip>
+          <template #default="{ row }">{{ categoryText(row.categoryId) }}</template>
         </el-table-column>
         <el-table-column prop="content" label="题干" min-width="320" show-overflow-tooltip>
           <template #default="{ row }">
@@ -268,7 +282,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Check, Close, Reading } from '@element-plus/icons-vue'
-import { listForEdit, getQuestionDetail, getQuestionStat, reviewQuestion, getQuestionChildren } from '@/api/question'
+import { listForEdit, getQuestionDetail, getQuestionStat, reviewQuestion, getQuestionChildren, listCategories } from '@/api/question'
 
 const typeOptions = [
   { value: 1, label: '单选题' },
@@ -284,6 +298,7 @@ const optionLetters = ['A', 'B', 'C', 'D', 'E', 'F']
 const stat = ref({})
 const query = reactive({
   status: 1,
+  categoryId: null,
   type: null,
   keyword: '',
   page: 1,
@@ -293,6 +308,8 @@ const list = ref([])
 const total = ref(0)
 const tableLoading = ref(false)
 const selected = ref([])
+const categoryTree = ref([])
+const categoryCascader = ref(null)
 
 const reviewDialogVisible = ref(false)
 const reviewForm = reactive({ status: 2, remark: '' })
@@ -346,6 +363,60 @@ function parseOptions(opts) {
   }
 }
 
+function buildTree(list) {
+  const map = {}
+  const roots = []
+  list.forEach((i) => {
+    map[i.id] = { id: i.id, name: i.name, parentId: i.parentId, sort: i.sort, children: [] }
+  })
+  list.forEach((i) => {
+    const node = map[i.id]
+    if (!i.parentId || i.parentId === 0) roots.push(node)
+    else if (map[i.parentId]) map[i.parentId].children.push(node)
+    else roots.push(node)
+  })
+  const sortRec = (arr) => {
+    arr.sort((a, b) => (a.sort || 0) - (b.sort || 0))
+    arr.forEach((n) => {
+      if (n.children && n.children.length === 0) delete n.children
+      else if (n.children) sortRec(n.children)
+    })
+  }
+  sortRec(roots)
+  return roots
+}
+
+async function loadCategories() {
+  try {
+    const list = await listCategories()
+    categoryTree.value = buildTree(list || [])
+  } catch (e) {
+    // ignore
+  }
+}
+
+// 扁平化分类树，用于在表格中按 categoryId 显示分类名
+const categoryMap = computed(() => {
+  const map = {}
+  const walk = (nodes) => {
+    ;(nodes || []).forEach((n) => {
+      map[n.id] = n.name
+      if (n.children) walk(n.children)
+    })
+  }
+  walk(categoryTree.value)
+  return map
+})
+
+function categoryText(id) {
+  if (!id) return '-'
+  return categoryMap.value[id] || '-'
+}
+
+function onCategoryChange(val) {
+  query.categoryId = val
+}
+
 function rowClassName({ row }) {
   return row.type === 7 ? 'is-composite' : 'no-expand'
 }
@@ -388,8 +459,10 @@ async function loadList(page) {
 
 function resetQuery() {
   query.status = 1
+  query.categoryId = null
   query.type = null
   query.keyword = ''
+  categoryCascader.value = null
   loadList(1)
 }
 
@@ -466,6 +539,7 @@ async function viewDetail(row) {
 
 onMounted(() => {
   loadStat()
+  loadCategories()
   loadList(1)
 })
 </script>

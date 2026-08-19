@@ -18,8 +18,10 @@ import com.shaanxi.zhiping.dto.QuestionProofreadStatVO;
 import com.shaanxi.zhiping.dto.QuestionQueryDTO;
 import com.shaanxi.zhiping.dto.QuestionReviewDTO;
 import com.shaanxi.zhiping.entity.Question;
+import com.shaanxi.zhiping.entity.QuestionDeleted;
 import com.shaanxi.zhiping.entity.QuestionImportBatch;
 import com.shaanxi.zhiping.exception.BusinessException;
+import com.shaanxi.zhiping.mapper.QuestionDeletedMapper;
 import com.shaanxi.zhiping.mapper.QuestionImportBatchMapper;
 import com.shaanxi.zhiping.mapper.QuestionMapper;
 import com.shaanxi.zhiping.util.RedisUtil;
@@ -58,6 +60,9 @@ public class AdminQuestionService {
 
     @Resource
     private QuestionMapper questionMapper;
+
+    @Resource
+    private QuestionDeletedMapper questionDeletedMapper;
 
     @Resource
     private QuestionImportBatchMapper batchMapper;
@@ -108,13 +113,16 @@ public class AdminQuestionService {
         if (q.getStatus() == null) {
             q.setStatus("save_draft".equals(dto.getSubmitType()) ? 0 : 1);
         }
-        // 查重：同一 (content_hash, type) 且未删除的题已存在则拒绝录入
+        // 查重：同一 (content_hash, type, biz_section, category_id, year) 且未删除的题已存在则拒绝录入
         String hash = computeContentHash(q.getContent(), q.getType());
         q.setContentHash(hash);
-        Question existed = findDuplicate(hash, q.getType());
+        Question existed = findDuplicate(hash, q.getType(), q.getBizSection(), q.getCategoryId(), q.getYear());
         if (existed != null) {
             throw new BusinessException(409, "题干与现有题目重复，已存在题 ID=" + existed.getId()
-                    + "（题型=" + typeText(q.getType()) + "）");
+                    + "（题型=" + typeText(q.getType())
+                    + "，业务分区=" + q.getBizSection()
+                    + "，分类ID=" + q.getCategoryId()
+                    + "，年份=" + q.getYear() + "）");
         }
         questionMapper.insert(q);
         invalidateCache();
@@ -139,16 +147,26 @@ public class AdminQuestionService {
         if (q.getStatus() == null) {
             q.setStatus(1);
         }
-        // 题干或题型变更 → 重算 hash，并校验与其他题不冲突
+        // 任一字段变更 → 重算 hash，并校验与其他题不冲突（5 项全等才算重复）
+        String newContent = q.getContent() != null ? q.getContent() : existed.getContent();
+        Integer newType = q.getType() != null ? q.getType() : existed.getType();
+        Integer newBizSection = q.getBizSection() != null ? q.getBizSection() : existed.getBizSection();
+        Long newCategoryId = q.getCategoryId() != null ? q.getCategoryId() : existed.getCategoryId();
+        Integer newYear = q.getYear() != null ? q.getYear() : existed.getYear();
         boolean contentChanged = q.getContent() != null && !q.getContent().equals(existed.getContent());
         boolean typeChanged = q.getType() != null && !q.getType().equals(existed.getType());
-        if (contentChanged || typeChanged) {
-            String newContent = q.getContent() != null ? q.getContent() : existed.getContent();
-            Integer newType = q.getType() != null ? q.getType() : existed.getType();
+        boolean bizChanged = q.getBizSection() != null && !q.getBizSection().equals(existed.getBizSection());
+        boolean catChanged = q.getCategoryId() != null && !q.getCategoryId().equals(existed.getCategoryId());
+        boolean yearChanged = q.getYear() != null && !q.getYear().equals(existed.getYear());
+        if (contentChanged || typeChanged || bizChanged || catChanged || yearChanged) {
             String hash = computeContentHash(newContent, newType);
-            Question dup = findDuplicate(hash, newType);
+            Question dup = findDuplicate(hash, newType, newBizSection, newCategoryId, newYear);
             if (dup != null && !dup.getId().equals(dto.getId())) {
-                throw new BusinessException(409, "修改后题干与其他题目重复，冲突题 ID=" + dup.getId());
+                throw new BusinessException(409, "修改后题干与其他题目重复，冲突题 ID=" + dup.getId()
+                        + "（题型=" + typeText(newType)
+                        + "，业务分区=" + newBizSection
+                        + "，分类ID=" + newCategoryId
+                        + "，年份=" + newYear + "）");
             }
             q.setContentHash(hash);
         }
@@ -159,32 +177,154 @@ public class AdminQuestionService {
     }
 
     /**
-     * 删除题目
+     * 删除题目（物理删除模型）：
+     * 1) 把要删的题目（含其所有子题）查出来
+     * 2) 写入归档表 t_question_deleted（deleted=1, deleted_at=NOW）
+     * 3) 从主表 t_question 物理删除
+     * 4) 清缓存
+     * 删除复合题父行时，会一并归档删除其所有子题（parent_id = 父id）。
+     *
+     * @param id 题目 ID
      */
+    @Transactional(rollbackFor = Exception.class)
     public boolean delete(Long id) {
-        boolean ok = questionMapper.deleteById(id) > 0;
-        if (ok) {
-            redisUtil.delete(CacheConstants.QUESTION_DETAIL_PREFIX + id);
-            redisUtil.delete(CacheConstants.QUESTION_CHILDREN_PREFIX + id);
-            invalidateCache();
+        // 收集本删除动作要归档的 id 列表（自身 + 子题）
+        List<Long> ids = collectDeleteIds(id);
+        if (ids.isEmpty()) {
+            return false;
         }
-        return ok;
+        archiveAndDelete(ids);
+        for (Long x : ids) {
+            redisUtil.delete(CacheConstants.QUESTION_DETAIL_PREFIX + x);
+            redisUtil.delete(CacheConstants.QUESTION_CHILDREN_PREFIX + x);
+        }
+        invalidateCache();
+        return true;
     }
 
     /**
-     * 批量删除
+     * 批量删除（物理删除模型）：
+     * 对每个 id 收集自身 + 子题，去重后统一归档 + 物理删除。
      */
+    @Transactional(rollbackFor = Exception.class)
     public int deleteBatch(List<Long> ids) {
         if (CollUtil.isEmpty(ids)) {
             return 0;
         }
-        int rows = questionMapper.deleteBatchIds(ids);
+        // 收集所有要删的 id（含级联子题），去重
+        java.util.LinkedHashSet<Long> all = new java.util.LinkedHashSet<>();
         for (Long id : ids) {
-            redisUtil.delete(CacheConstants.QUESTION_DETAIL_PREFIX + id);
-            redisUtil.delete(CacheConstants.QUESTION_CHILDREN_PREFIX + id);
+            all.addAll(collectDeleteIds(id));
+        }
+        if (all.isEmpty()) {
+            return 0;
+        }
+        List<Long> list = new java.util.ArrayList<>(all);
+        archiveAndDelete(list);
+        for (Long x : list) {
+            redisUtil.delete(CacheConstants.QUESTION_DETAIL_PREFIX + x);
+            redisUtil.delete(CacheConstants.QUESTION_CHILDREN_PREFIX + x);
         }
         invalidateCache();
-        return rows;
+        return list.size();
+    }
+
+    /**
+     * 收集删除一个复合题父行时需要级联删除的所有 id：
+     * - id 自身
+     * - 若 id 是复合题父行（parent_id=0 且 type=7），则还包含 parent_id=id 的所有子题
+     * 简单题（非复合题父行）只删自身。
+     * 使用物理查询（绕过全局逻辑删除过滤），即使 deleted=1 也能查到，保证幂等。
+     */
+    private List<Long> collectDeleteIds(Long id) {
+        Question q = questionMapper.physicalSelectById(id);
+        if (q == null) {
+            return java.util.Collections.emptyList();
+        }
+        List<Long> result = new java.util.ArrayList<>();
+        result.add(id);
+        // 复合题父行 → 级联删除子题
+        if (q.getParentId() != null && q.getParentId() == 0L
+                && q.getType() != null && q.getType() == 7) {
+            List<Question> children = questionMapper.physicalSelectByParentId(id);
+            for (Question c : children) {
+                result.add(c.getId());
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 把给定 ids 对应的题目归档到 t_question_deleted，然后从 t_question 物理删除。
+     * 注意：不能用 questionMapper.deleteBatchIds —— 因为全局 logic-delete-field=deleted
+     * 配置会让 BaseMapper 的 delete 退化为 UPDATE deleted=1。这里通过自定义 SQL
+     * 真正执行 DELETE FROM 物理删除。
+     */
+    private void archiveAndDelete(List<Long> ids) {
+        if (ids.isEmpty()) {
+            return;
+        }
+        // 1) 查出所有原始行（用物理查询，避免全局逻辑删除 deleted=0 过滤漏查已软删的行）
+        //    collectDeleteIds 已通过 physicalSelect* 拿到 ids，这里逐个 physicalSelectById 即可，
+        //    ids 数量通常 ≤ 几十，性能可接受
+        List<Question> questions = new java.util.ArrayList<>();
+        for (Long id : ids) {
+            Question q = questionMapper.physicalSelectById(id);
+            if (q != null) {
+                questions.add(q);
+            }
+        }
+        if (questions.isEmpty()) {
+            return;
+        }
+        // 2) 转为归档实体并插入归档表（归档表只用作历史留痕，不做重复校验）
+        LocalDateTime now = LocalDateTime.now();
+        for (Question q : questions) {
+            QuestionDeleted archive = toDeletedEntity(q, now);
+            questionDeletedMapper.insert(archive);
+        }
+        // 3) 物理删除主表记录（绕过 BaseMapper 的逻辑删除，用原生 SQL）
+        try {
+            questionMapper.physicalDeleteByIds(ids);
+        } catch (Throwable t) {
+            log.error("物理删除 t_question 失败 ids={}", ids, t);
+            throw new BusinessException("删除试题失败：" + t.getMessage());
+        }
+    }
+
+    /**
+     * 把 Question 实体转换为 QuestionDeleted 归档实体。
+     */
+    private static QuestionDeleted toDeletedEntity(Question q, LocalDateTime now) {
+        QuestionDeleted d = new QuestionDeleted();
+        // 归档表主键 id 自增；原 t_question ID 存到 question_id
+        d.setId(null);
+        d.setQuestionId(q.getId());
+        d.setBizSection(q.getBizSection());
+        d.setCategoryId(q.getCategoryId());
+        d.setParentId(q.getParentId());
+        d.setType(q.getType());
+        d.setSubType(q.getSubType());
+        d.setSort(q.getSort());
+        d.setDifficulty(q.getDifficulty());
+        d.setContent(q.getContent());
+        d.setContentHash(q.getContentHash());
+        d.setOptions(q.getOptions());
+        d.setAnswer(q.getAnswer());
+        d.setScore(q.getScore());
+        d.setAnalysis(q.getAnalysis());
+        d.setYear(q.getYear());
+        d.setSource(q.getSource());
+        d.setStatus(q.getStatus());
+        d.setImportBatchId(q.getImportBatchId());
+        d.setReviewerId(q.getReviewerId());
+        d.setReviewRemark(q.getReviewRemark());
+        d.setReviewedAt(q.getReviewedAt());
+        d.setCreatedAt(q.getCreatedAt());
+        d.setUpdatedAt(q.getUpdatedAt());
+        d.setDeleted(1);
+        d.setDeletedAt(now);
+        return d;
     }
 
     // ==================== 2. 批量导入 ====================
@@ -192,7 +332,14 @@ public class AdminQuestionService {
     /**
      * Excel 批量导入
      * Excel 列约定（首行表头）：
-     *   题型* | 题干* | 选项A | 选项B | 选项C | 选项D | 选项E | 选项F | 正确答案* | 分值 | 难度 | 解析 | 子题型 | 分类ID | 年份 | 来源 | 排序
+     *   题型* | 子题型 | 题干* | 答案* | 解析 | 难度 | 分数 | 选项A-F | (分类ID | 年份 | 来源 | 排序 可选)
+     *
+     * <p>复合题采用父子行格式：
+     * <ul>
+     *   <li>父行：题型=复合题，题干=语段/材料（答案、选项可为空）</li>
+     *   <li>子行：题型留空，子题型=单选题/多选题/简答题等（作为子题题型），题干=小题题干</li>
+     *   <li>遇到下一个非空"题型"时结束当前复合题上下文</li>
+     * </ul>
      */
     @Transactional(rollbackFor = Exception.class)
     public QuestionImportResultVO importExcel(MultipartFile file, QuestionImportDTO params, Long operatorId) {
@@ -228,18 +375,22 @@ public class AdminQuestionService {
         try (InputStream in = file.getInputStream()) {
             ExcelReader reader = ExcelUtil.getReader(in);
             reader.addHeaderAlias("题型", "type");
+            reader.addHeaderAlias("子题型", "subType");
             reader.addHeaderAlias("题干", "content");
+            // 兼容两种表头命名："答案"(新模板) / "正确答案"(旧模板)
+            reader.addHeaderAlias("答案", "answer");
+            reader.addHeaderAlias("正确答案", "answer");
+            // 兼容两种表头命名："分数"(新模板) / "分值"(旧模板)
+            reader.addHeaderAlias("分数", "score");
+            reader.addHeaderAlias("分值", "score");
+            reader.addHeaderAlias("难度", "difficulty");
+            reader.addHeaderAlias("解析", "analysis");
             reader.addHeaderAlias("选项A", "optA");
             reader.addHeaderAlias("选项B", "optB");
             reader.addHeaderAlias("选项C", "optC");
             reader.addHeaderAlias("选项D", "optD");
             reader.addHeaderAlias("选项E", "optE");
             reader.addHeaderAlias("选项F", "optF");
-            reader.addHeaderAlias("正确答案", "answer");
-            reader.addHeaderAlias("分值", "score");
-            reader.addHeaderAlias("难度", "difficulty");
-            reader.addHeaderAlias("解析", "analysis");
-            reader.addHeaderAlias("子题型", "subType");
             reader.addHeaderAlias("分类ID", "categoryId");
             reader.addHeaderAlias("年份", "year");
             reader.addHeaderAlias("来源", "source");
@@ -251,31 +402,49 @@ public class AdminQuestionService {
         }
 
         int total = rows.size();
-        // 本批次内已见 (content_hash, type) 集合，避免同一 Excel 内重复行也全部入库
+        // 本批次内已见 (content_hash, type, biz_section, category_id, year) 集合，
+        // 避免同一 Excel 内重复行也全部入库
         java.util.Set<String> batchSeenKeys = new java.util.HashSet<>();
         int duplicateCount = 0;
+        // 当前复合题父行 ID（0 表示不在复合题上下文中）；遇到下一个非空"题型"会重置
+        long lastParentId = 0L;
         for (int i = 0; i < total; i++) {
             int excelRow = i + 2; // 第 1 行表头
             Map<String, Object> row = rows.get(i);
             try {
-                Question q = buildQuestionFromRow(row, params);
-                // 查重：先算 hash，再查 DB 与本批次
+                Question q = buildQuestionFromRow(row, params, lastParentId);
+                // 查重：先算 hash，再查 DB 与本批次（5 项全等才算重复）
                 String hash = computeContentHash(q.getContent(), q.getType());
                 q.setContentHash(hash);
-                String dedupKey = hash + "|" + q.getType();
+                String dedupKey = hash + "|" + q.getType()
+                        + "|" + q.getBizSection()
+                        + "|" + q.getCategoryId()
+                        + "|" + q.getYear();
                 if (batchSeenKeys.contains(dedupKey)) {
                     duplicateCount++;
-                    throw new BusinessException("题干与本批次前序行重复（题型=" + typeText(q.getType()) + "），已跳过");
+                    throw new BusinessException("题干与本批次前序行重复（题型=" + typeText(q.getType())
+                            + "，业务分区=" + q.getBizSection()
+                            + "，分类ID=" + q.getCategoryId()
+                            + "，年份=" + q.getYear() + "），已跳过");
                 }
-                Question existed = findDuplicate(hash, q.getType());
+                Question existed = findDuplicate(hash, q.getType(), q.getBizSection(), q.getCategoryId(), q.getYear());
                 if (existed != null) {
                     duplicateCount++;
                     throw new BusinessException("题干已存在，重复题 ID=" + existed.getId()
-                            + "（题型=" + typeText(q.getType()) + "），已跳过");
+                            + "（题型=" + typeText(q.getType())
+                            + "，业务分区=" + q.getBizSection()
+                            + "，分类ID=" + q.getCategoryId()
+                            + "，年份=" + q.getYear() + "），已跳过");
                 }
                 q.setImportBatchId(batchId);
                 q.setStatus(params.getStatus() != null ? params.getStatus() : 1);
                 questionMapper.insert(q);
+                // 维护复合题上下文：父行后更新 lastParentId；独立行重置；子行保持
+                if (q.getType() != null && q.getType() == 7) {
+                    lastParentId = q.getId();
+                } else if (q.getParentId() == null || q.getParentId() == 0L) {
+                    lastParentId = 0L;
+                }
                 batchSeenKeys.add(dedupKey);
                 successCount++;
             } catch (Exception e) {
@@ -324,6 +493,9 @@ public class AdminQuestionService {
         }
         if (query.getStatus() != null) {
             wrapper.eq(QuestionImportBatch::getStatus, query.getStatus());
+        }
+        if (query.getCategoryId() != null) {
+            wrapper.eq(QuestionImportBatch::getCategoryId, query.getCategoryId());
         }
         wrapper.orderByDesc(QuestionImportBatch::getCreatedAt);
         IPage<QuestionImportBatch> result = batchMapper.selectPage(p, wrapper);
@@ -530,33 +702,76 @@ public class AdminQuestionService {
         return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
     }
 
-    private Question buildQuestionFromRow(Map<String, Object> row, QuestionImportDTO params) {
-        Question q = new Question();
-        Object typeVal = row.get("type");
-        if (typeVal == null || StrUtil.isBlank(String.valueOf(typeVal))) {
-            throw new BusinessException("题型不能为空");
+    /**
+     * 解析题型编码：支持中文名称（单选题/多选题/.../复合题）和数字（1-7）；非法返回 null
+     */
+    private Integer parseTypeCode(String s) {
+        if (s == null) return null;
+        String t = s.trim();
+        Integer code = TYPE_NAME_MAP.get(t);
+        if (code != null) return code;
+        try {
+            int n = Integer.parseInt(t.replaceAll("\\.0$", ""));
+            if (n >= 1 && n <= 7) return n;
+        } catch (NumberFormatException ignored) {
         }
-        Integer typeCode = TYPE_NAME_MAP.get(String.valueOf(typeVal).trim());
-        if (typeCode == null) {
-            // 支持数字
-            try {
-                typeCode = Integer.parseInt(String.valueOf(typeVal).trim());
-            } catch (NumberFormatException ignored) {
-                throw new BusinessException("题型非法：" + typeVal);
+        return null;
+    }
+
+    /**
+     * 从 Excel 行构造 Question，支持三种角色：
+     * 1) 复合题父行：题型=复合题，题干=语段，答案/选项可空
+     * 2) 复合题子行：题型留空，子题型=单选题/简答题等（作为子题题型），parentId=lastParentId
+     * 3) 独立行：题型为非"复合题"的非空值，沿用原有逻辑
+     */
+    private Question buildQuestionFromRow(Map<String, Object> row, QuestionImportDTO params, long lastParentId) {
+        Question q = new Question();
+
+        Object typeVal = row.get("type");
+        Object subTypeVal = row.get("subType");
+        String typeStr = typeVal == null ? "" : String.valueOf(typeVal).trim();
+        String subTypeStr = subTypeVal == null ? "" : String.valueOf(subTypeVal).trim();
+
+        boolean isCompositeParent = StrUtil.isNotBlank(typeStr) && parseTypeCode(typeStr) != null && parseTypeCode(typeStr) == 7;
+        boolean isCompositeChild = StrUtil.isBlank(typeStr) && StrUtil.isNotBlank(subTypeStr);
+
+        // 1) 确定题型与 parentId
+        Integer typeCode;
+        if (isCompositeParent) {
+            typeCode = 7;
+            q.setParentId(0L);
+        } else if (isCompositeChild) {
+            typeCode = parseTypeCode(subTypeStr);
+            if (typeCode == null) {
+                throw new BusinessException("子题型不是合法的题型名称：" + subTypeStr + "（应为单选题/多选题/判断题/填空题/简答题/计算题等）");
             }
-            if (typeCode < 1 || typeCode > 7) {
-                throw new BusinessException("题型编码超出范围(1-7)：" + typeVal);
+            if (typeCode == 7) {
+                throw new BusinessException("子题型不能为复合题");
             }
+            if (lastParentId == 0L) {
+                throw new BusinessException("子题型行缺少父复合题（请确保前一行 题型=复合题）");
+            }
+            q.setParentId(lastParentId);
+        } else {
+            if (StrUtil.isBlank(typeStr)) {
+                throw new BusinessException("题型不能为空（若为复合题子题，请在「子题型」列填写单选题/简答题等）");
+            }
+            typeCode = parseTypeCode(typeStr);
+            if (typeCode == null) {
+                throw new BusinessException("题型非法：" + typeStr);
+            }
+            q.setParentId(0L);
         }
         q.setType(typeCode);
 
+        // 2) 题干：必填
         Object contentVal = row.get("content");
         if (contentVal == null || StrUtil.isBlank(String.valueOf(contentVal))) {
             throw new BusinessException("题干不能为空");
         }
         q.setContent(String.valueOf(contentVal).trim());
 
-        // 选项：选择题必填
+        // 3) 选项：选择题(1,2,3)必填；非选择题若填了也保留；复合题父行不校验
         List<String> opts = new ArrayList<>();
         for (String key : Arrays.asList("optA", "optB", "optC", "optD", "optE", "optF")) {
             Object v = row.get(key);
@@ -569,23 +784,34 @@ public class AdminQuestionService {
                 throw new BusinessException("选择题必须填写至少一个选项");
             }
             q.setOptions(toOptionsJson(opts));
+        } else if (!opts.isEmpty()) {
+            q.setOptions(toOptionsJson(opts));
         }
 
+        // 4) 答案：复合题父行可空，其余必填
         Object answerVal = row.get("answer");
-        if (answerVal == null || StrUtil.isBlank(String.valueOf(answerVal))) {
-            throw new BusinessException("正确答案不能为空");
+        if (isCompositeParent) {
+            if (answerVal != null && StrUtil.isNotBlank(String.valueOf(answerVal))) {
+                q.setAnswer(String.valueOf(answerVal).trim());
+            }
+        } else {
+            if (answerVal == null || StrUtil.isBlank(String.valueOf(answerVal))) {
+                throw new BusinessException("正确答案不能为空");
+            }
+            q.setAnswer(String.valueOf(answerVal).trim());
         }
-        q.setAnswer(String.valueOf(answerVal).trim());
 
+        // 5) 分数
         Object scoreVal = row.get("score");
         if (scoreVal != null && StrUtil.isNotBlank(String.valueOf(scoreVal))) {
             try {
                 q.setScore(new BigDecimal(String.valueOf(scoreVal).trim()));
             } catch (NumberFormatException ignored) {
-                throw new BusinessException("分值格式非法：" + scoreVal);
+                throw new BusinessException("分数格式非法：" + scoreVal);
             }
         }
 
+        // 6) 难度
         Object diffVal = row.get("difficulty");
         if (diffVal != null && StrUtil.isNotBlank(String.valueOf(diffVal))) {
             Integer dCode = DIFFICULTY_NAME_MAP.get(String.valueOf(diffVal).trim());
@@ -601,16 +827,20 @@ public class AdminQuestionService {
             q.setDifficulty(2);
         }
 
+        // 7) 解析
         Object analysisVal = row.get("analysis");
         if (analysisVal != null && StrUtil.isNotBlank(String.valueOf(analysisVal))) {
             q.setAnalysis(String.valueOf(analysisVal).trim());
         }
 
-        Object subTypeVal = row.get("subType");
-        if (subTypeVal != null && StrUtil.isNotBlank(String.valueOf(subTypeVal))) {
-            q.setSubType(String.valueOf(subTypeVal).trim());
+        // 8) 子题型描述：复合题子行的"子题型"列已被用作题型，不再写入 sub_type；其余情况保留原值
+        if (!isCompositeChild) {
+            if (subTypeVal != null && StrUtil.isNotBlank(String.valueOf(subTypeVal))) {
+                q.setSubType(String.valueOf(subTypeVal).trim());
+            }
         }
 
+        // 9) 分类ID（Excel 可选；为空时用表单默认）
         Object categoryVal = row.get("categoryId");
         Long categoryId = null;
         if (categoryVal != null && StrUtil.isNotBlank(String.valueOf(categoryVal))) {
@@ -630,6 +860,7 @@ public class AdminQuestionService {
         }
         q.setCategoryId(categoryId);
 
+        // 10) 年份
         Object yearVal = row.get("year");
         Integer year = params.getYear();
         if (yearVal != null && StrUtil.isNotBlank(String.valueOf(yearVal))) {
@@ -641,6 +872,7 @@ public class AdminQuestionService {
         }
         q.setYear(year);
 
+        // 11) 来源
         Object sourceVal = row.get("source");
         String source = params.getSource();
         if (sourceVal != null && StrUtil.isNotBlank(String.valueOf(sourceVal))) {
@@ -648,6 +880,7 @@ public class AdminQuestionService {
         }
         q.setSource(source);
 
+        // 12) 排序
         Object sortVal = row.get("sort");
         int sort = 0;
         if (sortVal != null && StrUtil.isNotBlank(String.valueOf(sortVal))) {
@@ -660,7 +893,6 @@ public class AdminQuestionService {
         q.setSort(sort);
 
         q.setBizSection(params.getBizSection() != null ? params.getBizSection() : 1);
-        q.setParentId(0L);
         return q;
     }
 
@@ -721,15 +953,25 @@ public class AdminQuestionService {
     }
 
     /**
-     * 查重：在未删除题目中，查找 (content_hash, type) 命中的记录
+     * 查重：在未删除题目中，命中 (content_hash, type, biz_section, category_id, year) 全部一致的记录。
+     * 说明：content_hash 已对"题干+题型"做归一化指纹，再加 业务分区/分类/年份 三个字段直等过滤，
+     * 即 5 个条件全等才算重复（与 uk_hash_type_section_cat_year_dep 唯一索引一致）。
+     * 注：year 可能为 NULL，使用 isNull 处理，避免 SQL 中 = NULL 永真为假而漏判。
      *
      * @return 已存在的 Question，无则 null
      */
-    private Question findDuplicate(String contentHash, Integer type) {
+    private Question findDuplicate(String contentHash, Integer type, Integer bizSection, Long categoryId, Integer year) {
         LambdaQueryWrapper<Question> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Question::getContentHash, contentHash)
                .eq(Question::getType, type)
-               .last("LIMIT 1");
+               .eq(Question::getBizSection, bizSection)
+               .eq(Question::getCategoryId, categoryId);
+        if (year == null) {
+            wrapper.isNull(Question::getYear);
+        } else {
+            wrapper.eq(Question::getYear, year);
+        }
+        wrapper.last("LIMIT 1");
         return questionMapper.selectOne(wrapper);
     }
 }

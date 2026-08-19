@@ -21,6 +21,17 @@
             <el-option v-for="o in bizSectionOptions" :key="o.value" :label="o.label" :value="o.value" />
           </el-select>
         </el-form-item>
+        <el-form-item label="分类">
+          <el-cascader
+            v-model="queryCategoryCascader"
+            :options="categoryTree"
+            :props="{ value: 'id', label: 'name', children: 'children', checkStrictly: true, emitPath: false }"
+            placeholder="全部"
+            clearable
+            style="width: 120px"
+            @change="(v) => (query.categoryId = v)"
+          />
+        </el-form-item>
         <el-form-item label="题型">
           <el-select v-model="query.type" placeholder="全部" clearable style="width: 120px">
             <el-option v-for="o in typeOptions" :key="o.value" :label="o.label" :value="o.value" />
@@ -98,6 +109,9 @@
           <template #default="{ row }">
             <el-tag :type="typeTagType(row.type)" size="small">{{ typeText(row.type) }}</el-tag>
           </template>
+        </el-table-column>
+        <el-table-column label="分类" width="120" show-overflow-tooltip>
+          <template #default="{ row }">{{ categoryText(row.categoryId) }}</template>
         </el-table-column>
         <el-table-column prop="content" label="题干" min-width="320" show-overflow-tooltip>
           <template #default="{ row }">
@@ -347,6 +361,7 @@ const optionLetters = ['A', 'B', 'C', 'D', 'E', 'F']
 
 const query = reactive({
   bizSection: null,
+  categoryId: null,
   type: null,
   difficulty: null,
   status: null,
@@ -364,6 +379,7 @@ const dialogVisible = ref(false)
 const formRef = ref(null)
 const form = ref(null)
 const categoryCascader = ref(null)
+const queryCategoryCascader = ref(null)
 const categoryTree = ref([])
 const saveLoading = ref(false)
 // 复合题子题（编辑弹窗内只读展示）
@@ -472,6 +488,24 @@ async function loadCategories() {
   }
 }
 
+// 扁平化分类树，用于在表格中按 categoryId 显示分类名
+const categoryMap = computed(() => {
+  const map = {}
+  const walk = (nodes) => {
+    ;(nodes || []).forEach((n) => {
+      map[n.id] = n.name
+      if (n.children) walk(n.children)
+    })
+  }
+  walk(categoryTree.value)
+  return map
+})
+
+function categoryText(id) {
+  if (!id) return '-'
+  return categoryMap.value[id] || '-'
+}
+
 async function loadList(page) {
   if (page) query.page = page
   tableLoading.value = true
@@ -488,11 +522,13 @@ async function loadList(page) {
 
 function resetQuery() {
   query.bizSection = null
+  query.categoryId = null
   query.type = null
   query.difficulty = null
   query.status = null
   query.year = null
   query.keyword = ''
+  queryCategoryCascader.value = null
   loadList(1)
 }
 
