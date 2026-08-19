@@ -128,7 +128,7 @@ Page({
 
   // 开始刷题
   goPractice() {
-    this.ensureLogin(() => wx.switchTab({ url: '/pages/practice/practice' }))
+    this.ensureLogin(() => wx.navigateTo({ url: '/pages/pastpapers/pastpapers' }))
   },
 
   // 全真模考
@@ -212,7 +212,7 @@ Page({
   // 面试技巧课程
   goInterview() {
     this.ensureLogin(() =>
-      wx.switchTab({ url: '/pages/practice/practice' }),
+      wx.navigateTo({ url: '/pages/course/course' }),
     )
   },
 })

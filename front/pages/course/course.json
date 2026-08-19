@@ -1,6 +1,4 @@
 {
-  "usingComponents": {
-    "empty": "/components/empty/empty"
-  },
-  "navigationBarTitleText": "线下课程"
+  "usingComponents": {},
+  "navigationBarTitleText": "精品课程"
 }

@@ -3,13 +3,14 @@
     "pages/index/index",
     "pages/login/login",
     "pages/identity/identity",
-    "pages/practice/practice",
     "pages/exam/exam",
     "pages/wrongbook/wrongbook",
     "pages/college/college",
     "pages/college/detail",
     "pages/assess/assess",
     "pages/course/course",
+    "pages/pastpapers/pastpapers",
+    "pages/practice/practice",
     "pages/mine/mine"
   ],
   "window": {
@@ -39,8 +40,8 @@
         "selectedIconPath": "assets/icons/icon-tab-college-active.png"
       },
       {
-        "pagePath": "pages/practice/practice",
-        "text": "刷题",
+        "pagePath": "pages/course/course",
+        "text": "课程",
         "iconPath": "assets/icons/icon-tab-course.png",
         "selectedIconPath": "assets/icons/icon-tab-course-active.png"
       },

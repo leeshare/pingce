@@ -1,3 +1,98 @@
 <view class="page-course">
-  <empty wx:if="{{courses.length === 0}}" text="课程数据准备中" />
+  <!-- 红色头部 -->
+  <view class="course-header">
+    <view class="header-row">
+      <view class="header-title-wrap">
+        <image class="common-icon" src="/assets/icons/icon-course.svg" mode="aspectFit"></image>
+        <text class="header-title">精品课程</text>
+      </view>
+      <view class="header-action" bindtap="goMyCourses">
+        <image class="common-icon" src="/assets/icons/icon-course-list.svg" mode="aspectFit"></image>
+      </view>
+    </view>
+    <text class="header-sub">语数英基础课免费试听，面试技巧考前冲刺</text>
+  </view>
+
+  <view class="course-body">
+    <!-- 考前重磅发布 -->
+    <view class="section">
+      <view class="section-header">
+        <view class="section-title-wrap">
+          <text class="section-title-icon">🎬</text>
+          <text class="section-title">考前重磅发布</text>
+        </view>
+        <text class="badge badge-hot">热门付费</text>
+      </view>
+
+      <view class="course-list">
+        <!-- 主推付费课程 -->
+        <view class="featured-card">
+          <view class="featured-cover">
+            <text class="featured-cover-icon">👥</text>
+            <text class="featured-cover-text">招办老师面对面讲面试</text>
+          </view>
+          <view class="featured-body">
+            <view class="featured-info">
+              <text class="featured-name">考前面试技巧冲刺班</text>
+              <text class="featured-desc">礼仪规范 · 自我介绍 · 高频问答 · 模拟演练</text>
+            </view>
+            <view class="featured-price">
+              <text class="price-now">¥99</text>
+              <text class="price-origin">¥199</text>
+            </view>
+          </view>
+          <view class="featured-btn" bindtap="buyFeatured">立即购买</view>
+        </view>
+
+        <!-- 次级付费课程 -->
+        <view class="paid-card" wx:for="{{paidCourses}}" wx:key="id" data-id="{{item.id}}" data-name="{{item.name}}" data-price="{{item.price}}" bindtap="buyCourse">
+          <view class="paid-icon {{item.iconBg}}">
+            <text class="paid-icon-emoji">{{item.icon}}</text>
+          </view>
+          <view class="paid-info">
+            <text class="paid-name">{{item.name}}</text>
+            <text class="paid-desc">{{item.desc}}</text>
+            <view class="paid-meta">
+              <text class="badge badge-paid">付费</text>
+              <text class="paid-price">¥{{item.price}}</text>
+            </view>
+          </view>
+          <view class="paid-btn">购买</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 学科免费试听 -->
+    <view class="section" wx:for="{{subjects}}" wx:key="name" wx:for-item="subject">
+      <view class="section-header">
+        <text class="section-title">{{subject.name}}</text>
+        <text class="section-sub">免费试听</text>
+      </view>
+      <view class="course-list">
+        <view
+          class="free-card"
+          wx:for="{{subject.courses}}"
+          wx:key="id"
+          wx:for-item="course"
+          data-id="{{course.id}}"
+          data-name="{{course.name}}"
+          bindtap="tryListen"
+        >
+          <view class="free-icon {{course.iconBg}}">
+            <text class="free-icon-emoji">{{course.icon}}</text>
+          </view>
+          <view class="free-info">
+            <text class="free-name">{{course.name}}</text>
+            <text class="free-desc">{{course.lessons}} 节 · 免费试听</text>
+            <view class="free-meta">
+              <text class="badge badge-free">免费</text>
+              <text class="free-action">立即试听</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="course-bottom-space"></view>
+  </view>
 </view>

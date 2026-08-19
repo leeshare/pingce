@@ -1,3 +1,425 @@
+/* pages/course/course.wxss */
+
 .page-course {
-  padding: 40rpx 0;
+  --snx-red: #a51d26;
+  --snx-red-light: #c62828;
+  --snx-bg: #f7f6f3;
+  --snx-card: #ffffff;
+  --snx-border: #e7e5e4;
+  --snx-text: #1f2937;
+  --snx-text-secondary: #6b7280;
+  --snx-text-muted: #9ca3af;
+
+  --snx-red-50: #fef2f2;
+  --snx-amber-50: #fffbeb;
+  --snx-amber-100: #fef3c7;
+  --snx-amber-700: #b45309;
+  --snx-green-50: #ecfdf5;
+  --snx-green-700: #15803d;
+  --snx-slate-100: #f1f5f9;
+  --snx-slate-600: #475569;
+
+  min-height: 100vh;
+  background: var(--snx-bg);
+  color: var(--snx-text);
+  box-sizing: border-box;
+}
+
+/* ===== 红色头部 ===== */
+.course-header {
+  background: var(--snx-red);
+  padding: 24rpx 40rpx 32rpx;
+  color: #fff;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.header-title-icon {
+  font-size: 36rpx;
+  line-height: 1;
+}
+
+.header-title {
+  font-size: 40rpx;
+  font-weight: 700;
+}
+
+.header-action {
+  width: 64rpx;
+  height: 64rpx;
+  border: 2rpx solid rgba(252, 165, 165, 0.7);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-action:active {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.header-action-icon {
+  font-size: 32rpx;
+  line-height: 1;
+}
+
+.header-sub {
+  display: block;
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: #fecaca;
+}
+
+/* ===== 主体 ===== */
+.course-body {
+  padding: 32rpx;
+}
+
+/* section */
+.section {
+  margin-bottom: 40rpx;
+}
+
+.section:last-child {
+  margin-bottom: 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.section-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.section-title-icon {
+  font-size: 32rpx;
+  color: var(--snx-red);
+  line-height: 1;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--snx-text);
+}
+
+.section-sub {
+  font-size: 24rpx;
+  color: var(--snx-red);
+}
+
+/* 通用标签 */
+.badge {
+  padding: 4rpx 16rpx;
+  font-size: 20rpx;
+  border-radius: 999rpx;
+  font-weight: 500;
+}
+
+.badge-hot {
+  background: var(--snx-amber-100);
+  color: var(--snx-amber-700);
+}
+
+.badge-paid {
+  background: var(--snx-amber-100);
+  color: var(--snx-amber-700);
+}
+
+.badge-free {
+  background: var(--snx-green-50);
+  color: var(--snx-green-700);
+}
+
+/* 课程列表 */
+.course-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+/* ===== 主推付费卡 ===== */
+.featured-card {
+  background: var(--snx-card);
+  border: 2rpx solid var(--snx-border);
+  border-radius: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 16rpx rgba(15, 23, 42, 0.04);
+}
+
+.featured-cover {
+  height: 224rpx;
+  background: linear-gradient(135deg, var(--snx-red), var(--snx-red-light));
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+}
+
+.featured-cover-icon {
+  font-size: 80rpx;
+  line-height: 1;
+}
+
+.featured-cover-text {
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.featured-body {
+  padding: 32rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24rpx;
+}
+
+.featured-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.featured-name {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--snx-text);
+}
+
+.featured-desc {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: var(--snx-text-secondary);
+}
+
+.featured-price {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.price-now {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: var(--snx-red);
+  line-height: 1.1;
+}
+
+.price-origin {
+  margin-top: 4rpx;
+  font-size: 20rpx;
+  color: var(--snx-text-muted);
+  text-decoration: line-through;
+}
+
+.featured-btn {
+  margin: 0 32rpx 32rpx;
+  background: var(--snx-red);
+  color: #fff;
+  border-radius: 16rpx;
+  padding: 20rpx 0;
+  text-align: center;
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+.featured-btn:active {
+  background: var(--snx-red-light);
+}
+
+/* ===== 次级付费卡 ===== */
+.paid-card {
+  background: var(--snx-card);
+  border: 2rpx solid var(--snx-border);
+  border-radius: 24rpx;
+  padding: 24rpx;
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(15, 23, 42, 0.04);
+}
+
+.paid-card:active {
+  background: #fafaf9;
+}
+
+.paid-icon {
+  width: 128rpx;
+  height: 128rpx;
+  flex-shrink: 0;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.paid-icon-amber {
+  background: var(--snx-amber-50);
+  color: var(--snx-amber-700);
+}
+
+.paid-icon-emoji {
+  font-size: 48rpx;
+  line-height: 1;
+}
+
+.paid-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.paid-name {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--snx-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.paid-desc {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: var(--snx-text-secondary);
+}
+
+.paid-meta {
+  margin-top: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.paid-price {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--snx-red);
+}
+
+.paid-btn {
+  flex-shrink: 0;
+  padding: 16rpx 24rpx;
+  background: var(--snx-red);
+  color: #fff;
+  border-radius: 16rpx;
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.paid-btn:active {
+  background: var(--snx-red-light);
+}
+
+/* ===== 免费试听卡 ===== */
+.free-card {
+  background: var(--snx-card);
+  border: 2rpx solid var(--snx-border);
+  border-radius: 24rpx;
+  padding: 24rpx;
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(15, 23, 42, 0.04);
+}
+
+.free-card:active {
+  background: #fafaf9;
+}
+
+.free-icon {
+  width: 128rpx;
+  height: 128rpx;
+  flex-shrink: 0;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.free-icon-red {
+  background: var(--snx-red-50);
+  color: var(--snx-red);
+}
+
+.free-icon-slate {
+  background: var(--snx-slate-100);
+  color: var(--snx-slate-600);
+}
+
+.free-icon-amber {
+  background: var(--snx-amber-50);
+  color: var(--snx-amber-700);
+}
+
+.free-icon-emoji {
+  font-size: 48rpx;
+  line-height: 1;
+}
+
+.free-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.free-name {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--snx-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.free-desc {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: var(--snx-text-secondary);
+}
+
+.free-meta {
+  margin-top: 16rpx;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.free-action {
+  font-size: 22rpx;
+  color: var(--snx-red);
+  font-weight: 500;
+}
+
+.course-bottom-space {
+  height: 32rpx;
+}
+
+.common-icon {
+  font-size: 30rpx;
+  line-height: 1;
+  width: 20px;
+  height: 20px;
 }

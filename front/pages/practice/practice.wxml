@@ -1,19 +1,157 @@
-<view class="page-practice">
-  <view class="page-title">
-    <text class="title-main">刷题练习</text>
-    <text class="title-desc">分类练习 · 巩固提升</text>
+<wxs src="./practice.wxs" module="q" />
+
+<view class="page-question">
+  <!-- 红色头部：标题 + 进度 -->
+  <view class="q-header">
+    <view class="q-header-row">
+      <text class="q-header-title">真题练习</text>
+    </view>
+    <view class="q-progress-row">
+      <text class="q-progress-text">第 {{current + 1}} / {{questions.length}} 题</text>
+      <text class="q-progress-cat">{{categoryLabel}}</text>
+    </view>
+    <view class="q-progress-bar">
+      <view class="q-progress-inner" style="width: {{(current + 1) * 100 / questions.length}}%;"></view>
+    </view>
   </view>
 
-  <view class="category-list">
-    <view class="card category-card" wx:for="{{categories}}" wx:key="id" data-id="{{item.id}}" data-name="{{item.name}}" bindtap="handleStart">
-      <view class="category-info">
-        <text class="category-name">{{item.name}}</text>
-        <text class="category-count">{{item.count}} 道题目</text>
+  <scroll-view class="q-body" scroll-y enhanced show-scrollbar="{{false}}">
+    <!-- 题目卡片 -->
+    <view class="q-card {{animClass}}">
+      <view class="q-tags">
+        <text class="q-type-tag">{{question.typeTag}}</text>
+        <text class="q-score-tag">{{question.score}} 分</text>
       </view>
-      <view class="category-action">
-        <text class="action-text">开始练习</text>
-        <text class="arrow">›</text>
+      <view class="q-title">{{question.title}}</view>
+
+      <!-- 复合题：阅读材料 -->
+      <view class="q-material" wx:if="{{question.material}}">{{question.material}}</view>
+
+      <!-- 复合题：子题列表 -->
+      <view class="sub-list" wx:if="{{question.type === '复合'}}">
+        <view class="sub-item" wx:for="{{question.subQuestions}}" wx:key="index" wx:for-item="sub" wx:for-index="sIdx">
+          <view class="sub-title">{{sub.title}}</view>
+
+          <!-- 子题：简答 -->
+          <textarea
+            wx:if="{{sub.type === '简答'}}"
+            class="sub-textarea"
+            value="{{subAnswers[sIdx].text}}"
+            data-idx="{{sIdx}}"
+            bindinput="onSubTextInput"
+            placeholder="请输入你的答案..."
+            placeholder-class="textarea-ph"
+            maxlength="-1"
+            disabled="{{answered}}"
+          />
+
+          <!-- 子题：选择 -->
+          <view class="option-list" wx:else>
+            <view
+              class="option-card {{q.isSubSelected(subAnswers, sIdx, oIdx) ? 'option-selected' : ''}} {{answered && q.isSubOptionCorrect(sub, oIdx) ? 'option-correct' : ''}} {{answered && q.isSubSelected(subAnswers, sIdx, oIdx) && !q.isSubOptionCorrect(sub, oIdx) ? 'option-wrong' : ''}}"
+              wx:for="{{sub.options}}"
+              wx:key="index"
+              wx:for-item="opt"
+              wx:for-index="oIdx"
+              data-sidx="{{sIdx}}"
+              data-oidx="{{oIdx}}"
+              bindtap="selectSubOption"
+            >
+              <view class="option-badge {{q.isSubSelected(subAnswers, sIdx, oIdx) ? 'badge-active' : ''}}">{{opt.letter}}</view>
+              <text class="option-text">{{opt.text}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 简答/计算/填空题：文本框 -->
+      <textarea
+        wx:if="{{question.type === '简答' || question.type === '计算' || question.type === '填空'}}"
+        class="q-textarea"
+        value="{{textAnswer}}"
+        bindinput="onTextInput"
+        placeholder="{{question.type === '填空' ? '请输入填空答案，多个空用 | 分隔' : '请输入你的答案...'}}"
+        placeholder-class="textarea-ph"
+        maxlength="-1"
+        disabled="{{answered}}"
+      />
+
+      <!-- 单选/多选/判断题：选项 -->
+      <view class="option-list" wx:if="{{question.type === '单选' || question.type === '多选' || question.type === '判断'}}">
+        <view
+          class="option-card {{q.isSelected(selected, oIdx) ? 'option-selected' : ''}} {{answered && q.isOptionCorrect(question, oIdx) ? 'option-correct' : ''}} {{answered && q.isSelected(selected, oIdx) && !q.isOptionCorrect(question, oIdx) ? 'option-wrong' : ''}}"
+          wx:for="{{question.options}}"
+          wx:key="index"
+          wx:for-item="opt"
+          wx:for-index="oIdx"
+          data-idx="{{oIdx}}"
+          bindtap="selectOption"
+        >
+          <view class="option-badge {{q.isSelected(selected, oIdx) ? 'badge-active' : ''}}">{{opt.letter}}</view>
+          <text class="option-text">{{opt.text}}</text>
+        </view>
       </view>
     </view>
+
+    <!-- 反馈卡片 -->
+    <view class="feedback-card {{animClass}}" wx:if="{{answered}}">
+      <!-- 复合题反馈：汇总 + 各小题 -->
+      <block wx:if="{{question.type === '复合'}}">
+        <view class="feedback-summary">
+          <view class="summary-icon {{subCorrectCount === question.subQuestions.length ? 'icon-correct' : 'icon-warn'}}">{{subCorrectCount === question.subQuestions.length ? '✓' : '!'}}</view>
+          <text class="summary-text {{subCorrectCount === question.subQuestions.length ? 'text-correct' : 'text-warn'}}">答对 {{subCorrectCount}} / {{question.subQuestions.length}} 小题</text>
+        </view>
+        <view class="feedback-item" wx:for="{{question.subQuestions}}" wx:key="index" wx:for-item="sub" wx:for-index="sIdx">
+          <view class="feedback-item-head">
+            <text class="feedback-label">第 {{sIdx + 1}} 小题</text>
+            <text class="feedback-result {{subNoReference[sIdx] ? 'tag-neutral' : (subResults[sIdx] ? 'tag-correct' : 'tag-wrong')}}">{{subNoReference[sIdx] ? '无参考答案' : (subResults[sIdx] ? '正确' : '错误')}}</text>
+          </view>
+          <view class="feedback-line"><text class="feedback-line-label">你的答案：</text><text class="feedback-line-value">{{subUserAnswers[sIdx] || '—'}}</text></view>
+          <view class="feedback-line"><text class="feedback-line-label">正确答案：</text><text class="feedback-line-value feedback-line-bold">{{subCorrectAnswers[sIdx]}}</text></view>
+          <view class="feedback-line"><text class="feedback-line-label">解析：</text><text class="feedback-analysis">{{sub.analysis}}</text></view>
+          <view class="feedback-line">
+            <text class="feedback-line-label">知识点：</text>
+            <view class="knowledge-list">
+              <text class="knowledge-tag" wx:for="{{sub.knowledge}}" wx:key="*this" wx:for-item="k">{{k}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+
+      <!-- 普通题反馈 -->
+      <block wx:else>
+        <view class="feedback-summary">
+          <view class="summary-icon {{noReference ? 'icon-neutral' : (isCorrect ? 'icon-correct' : 'icon-wrong')}}">{{noReference ? '?' : (isCorrect ? '✓' : '✕')}}</view>
+          <text class="summary-text {{noReference ? 'text-neutral' : (isCorrect ? 'text-correct' : 'text-wrong')}}">{{noReference ? '无参考答案' : (isCorrect ? '回答正确' : '回答错误')}}</text>
+        </view>
+        <view class="feedback-item">
+          <view class="feedback-line"><text class="feedback-line-label">你的答案：</text><text class="feedback-line-value">{{userAnswerText || '—'}}</text></view>
+          <view class="feedback-line"><text class="feedback-line-label">正确答案：</text><text class="feedback-line-value feedback-line-bold">{{correctAnswerText}}</text></view>
+          <view class="feedback-line"><text class="feedback-line-label">解析：</text><text class="feedback-analysis">{{question.analysis}}</text></view>
+          <view class="feedback-line">
+            <text class="feedback-line-label">知识点：</text>
+            <view class="knowledge-list">
+              <text class="knowledge-tag" wx:for="{{question.knowledge}}" wx:key="*this" wx:for-item="k">{{k}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
+
+    <view class="q-bottom-space"></view>
+  </scroll-view>
+
+  <!-- 底部按钮 -->
+  <view class="q-footer">
+    <!-- 未提交：提交答案 + 上一题 -->
+    <block wx:if="{{!answered}}">
+      <view wx:if="{{current > 0}}" class="q-btn q-btn-ghost" bindtap="prevQuestion">上一题</view>
+      <view class="q-btn q-btn-primary" bindtap="submitAnswer">提交</view>
+    </block>
+    <!-- 已提交：上一题 + 下一题 -->
+    <block wx:else>
+      <view wx:if="{{current > 0}}" class="q-btn q-btn-ghost" bindtap="prevQuestion">上一题</view>
+      <view class="q-btn q-btn-primary" bindtap="nextQuestion">{{current + 1 >= questions.length ? '完成练习' : '下一题'}}</view>
+    </block>
   </view>
 </view>
