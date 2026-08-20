@@ -47,8 +47,8 @@ public class PracticeService {
     /** 填空题类型 */
     private static final int TYPE_FILL = 4;
 
-    /** 真题练习整卷缓存前缀，key: practice:list:{year}:{categoryId} */
-    private static final String CACHE_PREFIX = "practice:list:";
+    /** 真题练习整卷缓存前缀，复用 CacheConstants.PRACTICE_LIST_PREFIX */
+    private static final String CACHE_PREFIX = CacheConstants.PRACTICE_LIST_PREFIX;
 
     /** 整卷缓存 10 分钟 */
     private static final long CACHE_TTL = 10 * 60;
@@ -106,6 +106,8 @@ public class PracticeService {
         if (!compositeIds.isEmpty()) {
             List<Question> allChildren = questionMapper.selectList(
                     new LambdaQueryWrapper<Question>()
+                            .eq(Question::getBizSection, BIZ_SECTION_DANZHAO)
+                            .eq(Question::getStatus, STATUS_APPROVED)
                             .in(Question::getParentId, compositeIds)
                             .orderByAsc(Question::getParentId)
                             .orderByAsc(Question::getSort)
@@ -148,6 +150,8 @@ public class PracticeService {
         if (q.getType() != null && q.getType() == TYPE_COMPOSITE) {
             List<Question> children = questionMapper.selectList(
                     new LambdaQueryWrapper<Question>()
+                            .eq(Question::getBizSection, BIZ_SECTION_DANZHAO)
+                            .eq(Question::getStatus, STATUS_APPROVED)
                             .eq(Question::getParentId, id)
                             .orderByAsc(Question::getSort)
                             .orderByAsc(Question::getId)

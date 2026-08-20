@@ -23,6 +23,9 @@ public final class CacheConstants {
     /** 题目列表分页前缀，完整 key: question:list:{bizSection}:{categoryId}:{type}:{page}:{size} */
     public static final String QUESTION_LIST_PREFIX = "question:list:";
 
+    /** 小程序真题练习整卷缓存前缀，完整 key: practice:list:{year}:{categoryId} */
+    public static final String PRACTICE_LIST_PREFIX = "practice:list:";
+
     /** 试卷详情前缀，完整 key: paper:detail:{id} */
     public static final String PAPER_DETAIL_PREFIX = "paper:detail:";
 

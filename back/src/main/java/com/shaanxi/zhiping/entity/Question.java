@@ -49,11 +49,32 @@ public class Question {
     /** 选项JSON, 如["A.xxx","B.xxx"], 非选择题为NULL */
     private String options;
 
+    /** 知识点编码（如 SX.03.01.01.01） */
+    private String knowledgeCode;
+
+    /** 能力层级（如 L3） */
+    private String abilityLevel;
+
+    /** 辅助能力层级 */
+    private String abilityLevelAux;
+
+    /** 核心素养（如 SX-S5;SX-S2，分号分隔） */
+    private String coreLiteracy;
+
+    /** 主题语境 */
+    private String themeContext;
+
+    /** 难度系数P（0~1，如 0.8） */
+    private BigDecimal difficultyP;
+
     /** 正确答案: 单选"A", 多选"ABD", 填空["答1","答2"], 简答为参考范文 */
     private String answer;
 
     /** 分值 */
     private BigDecimal score;
+
+    /** 课程结构（旧Excel已存在的列，多数为空） */
+    private String courseStructure;
 
     /** 答案解析 */
     private String analysis;

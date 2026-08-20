@@ -310,8 +310,15 @@ public class AdminQuestionService {
         d.setContent(q.getContent());
         d.setContentHash(q.getContentHash());
         d.setOptions(q.getOptions());
+        d.setKnowledgeCode(q.getKnowledgeCode());
+        d.setAbilityLevel(q.getAbilityLevel());
+        d.setAbilityLevelAux(q.getAbilityLevelAux());
+        d.setCoreLiteracy(q.getCoreLiteracy());
+        d.setThemeContext(q.getThemeContext());
+        d.setDifficultyP(q.getDifficultyP());
         d.setAnswer(q.getAnswer());
         d.setScore(q.getScore());
+        d.setCourseStructure(q.getCourseStructure());
         d.setAnalysis(q.getAnalysis());
         d.setYear(q.getYear());
         d.setSource(q.getSource());
@@ -391,6 +398,14 @@ public class AdminQuestionService {
             reader.addHeaderAlias("选项D", "optD");
             reader.addHeaderAlias("选项E", "optE");
             reader.addHeaderAlias("选项F", "optF");
+            // 新版 Excel 扩展字段（数学单招等真题）——旧 Excel 缺列时自动取 null，导入不报错
+            reader.addHeaderAlias("课程结构", "courseStructure");
+            reader.addHeaderAlias("知识点编码", "knowledgeCode");
+            reader.addHeaderAlias("能力层级", "abilityLevel");
+            reader.addHeaderAlias("辅助能力层级", "abilityLevelAux");
+            reader.addHeaderAlias("核心素养", "coreLiteracy");
+            reader.addHeaderAlias("主题语境", "themeContext");
+            reader.addHeaderAlias("难度系数P", "difficultyP");
             reader.addHeaderAlias("分类ID", "categoryId");
             reader.addHeaderAlias("年份", "year");
             reader.addHeaderAlias("来源", "source");
@@ -649,7 +664,10 @@ public class AdminQuestionService {
     }
 
     private void invalidateCache() {
+        // 管理端题目列表 + 小程序练习整卷缓存都需清理
+        // 否则题目状态被改成待审核/驳回后，小程序仍可能命中旧缓存读到非已通过试题
         redisUtil.deleteByPrefix(CacheConstants.QUESTION_LIST_PREFIX);
+        redisUtil.deleteByPrefix(CacheConstants.PRACTICE_LIST_PREFIX);
     }
 
     private void validateQuestionDto(QuestionCreateDTO dto, boolean isCreate) {
@@ -893,7 +911,36 @@ public class AdminQuestionService {
         q.setSort(sort);
 
         q.setBizSection(params.getBizSection() != null ? params.getBizSection() : 1);
+
+        // 13) 新版 Excel 扩展字段（旧 Excel 缺列时为空字符串，统一转 null）
+        q.setCourseStructure(readStr(row, "courseStructure"));
+        q.setKnowledgeCode(readStr(row, "knowledgeCode"));
+        q.setAbilityLevel(readStr(row, "abilityLevel"));
+        q.setAbilityLevelAux(readStr(row, "abilityLevelAux"));
+        q.setCoreLiteracy(readStr(row, "coreLiteracy"));
+        q.setThemeContext(readStr(row, "themeContext"));
+
+        // 难度系数P：0~1 之间的小数；非数字或越界时忽略（保留 null）
+        Object dpVal = row.get("difficultyP");
+        if (dpVal != null && StrUtil.isNotBlank(String.valueOf(dpVal))) {
+            try {
+                BigDecimal dp = new BigDecimal(String.valueOf(dpVal).trim());
+                if (dp.compareTo(BigDecimal.ZERO) >= 0 && dp.compareTo(BigDecimal.ONE) <= 0) {
+                    q.setDifficultyP(dp);
+                }
+            } catch (NumberFormatException ignored) {
+                // 非法值忽略
+            }
+        }
         return q;
+    }
+
+    /** 从 row 中读字符串字段，空值统一返回 null（避免 MyBatis-Plus 插入 "" 占用存储） */
+    private static String readStr(Map<String, Object> row, String key) {
+        Object v = row.get(key);
+        if (v == null) return null;
+        String s = String.valueOf(v).trim();
+        return s.isEmpty() ? null : s;
     }
 
     private String toFailJson(List<QuestionImportResultVO.FailItem> items) {

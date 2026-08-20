@@ -44,9 +44,30 @@ public class QuestionDeleted {
 
     private String options;
 
+    /** 知识点编码（如 SX.03.01.01.01） */
+    private String knowledgeCode;
+
+    /** 能力层级（如 L3） */
+    private String abilityLevel;
+
+    /** 辅助能力层级 */
+    private String abilityLevelAux;
+
+    /** 核心素养 */
+    private String coreLiteracy;
+
+    /** 主题语境 */
+    private String themeContext;
+
+    /** 难度系数P */
+    private BigDecimal difficultyP;
+
     private String answer;
 
     private BigDecimal score;
+
+    /** 课程结构 */
+    private String courseStructure;
 
     private String analysis;
 

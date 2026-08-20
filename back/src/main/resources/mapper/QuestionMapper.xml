@@ -8,7 +8,9 @@
             id, biz_section, category_id, parent_id, type, sub_type, sort,
             difficulty, content, options, answer, score, analysis, year, source,
             status, import_batch_id, reviewer_id, review_remark, reviewed_at,
-            created_at, updated_at
+            created_at, updated_at,
+            course_structure, knowledge_code, ability_level, ability_level_aux,
+            core_literacy, theme_context, difficulty_p
         FROM t_question
         <where>
             <if test="q.bizSection != null">
@@ -60,7 +62,9 @@
             id, biz_section, category_id, parent_id, type, sub_type, sort,
             difficulty, content, content_hash, options, answer, score, analysis,
             year, source, status, import_batch_id, reviewer_id, review_remark,
-            reviewed_at, created_at, updated_at, deleted
+            reviewed_at, created_at, updated_at, deleted,
+            course_structure, knowledge_code, ability_level, ability_level_aux,
+            core_literacy, theme_context, difficulty_p
         FROM t_question
         WHERE id = #{id}
     </select>
@@ -72,7 +76,9 @@
             id, biz_section, category_id, parent_id, type, sub_type, sort,
             difficulty, content, content_hash, options, answer, score, analysis,
             year, source, status, import_batch_id, reviewer_id, review_remark,
-            reviewed_at, created_at, updated_at, deleted
+            reviewed_at, created_at, updated_at, deleted,
+            course_structure, knowledge_code, ability_level, ability_level_aux,
+            core_literacy, theme_context, difficulty_p
         FROM t_question
         WHERE parent_id = #{parentId}
     </select>

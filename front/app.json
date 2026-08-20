@@ -10,6 +10,7 @@
     "pages/assess/assess",
     "pages/course/course",
     "pages/pastpapers/pastpapers",
+    "pages/practice_condition/practice_condition",
     "pages/practice/practice",
     "pages/mine/mine"
   ],
