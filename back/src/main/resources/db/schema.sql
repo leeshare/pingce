@@ -83,6 +83,8 @@ CREATE TABLE IF NOT EXISTS `t_paper` (
     `biz_section`  TINYINT      NOT NULL DEFAULT 1 COMMENT '业务分区 1单招 2普通 3中考 4高考 5考研',
     `title`        VARCHAR(128) NOT NULL COMMENT '试卷名称',
     `category_id`  BIGINT       NOT NULL COMMENT '所属分类',
+    `year`         INT          DEFAULT NULL COMMENT '真题年份',
+    `source`       VARCHAR(128) DEFAULT NULL COMMENT '来源（如 2025年乙(A)试卷）',
     `description`  VARCHAR(512) DEFAULT NULL COMMENT '试卷说明',
     `duration`     INT          NOT NULL DEFAULT 90 COMMENT '考试时长(分钟)',
     `total_score`  INT          NOT NULL DEFAULT 100 COMMENT '总分',
@@ -94,7 +96,8 @@ CREATE TABLE IF NOT EXISTS `t_paper` (
     `deleted`      TINYINT      NOT NULL DEFAULT 0,
     PRIMARY KEY (`id`),
     KEY `idx_category` (`category_id`),
-    KEY `idx_biz_section` (`biz_section`)
+    KEY `idx_biz_section` (`biz_section`),
+    KEY `idx_paper_key` (`biz_section`, `category_id`, `year`, `source`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='试卷表';
 
 -- 5. 刷题记录表

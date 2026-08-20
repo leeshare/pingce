@@ -74,6 +74,18 @@ const routes = [
         meta: { title: '课程管理', icon: 'Reading', permission: 'course:list' },
       },
       {
+        path: 'paper/maintain',
+        name: 'PaperMaintain',
+        component: () => import('@/views/paper/maintain.vue'),
+        meta: { title: '真卷维护', icon: 'Notebook', permission: 'paper:maintain' },
+      },
+      {
+        path: 'paper/publish',
+        name: 'PaperPublish',
+        component: () => import('@/views/paper/publish.vue'),
+        meta: { title: '试卷发布', icon: 'Promotion', permission: 'paper:publish' },
+      },
+      {
         path: 'user/list',
         name: 'UserList',
         component: () => import('@/views/user/list.vue'),

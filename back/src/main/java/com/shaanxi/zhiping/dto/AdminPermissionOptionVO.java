@@ -48,6 +48,9 @@ public class AdminPermissionOptionVO {
         // 课程管理
         list.add(new AdminPermissionOptionVO("course:list", "课程列表", "课程管理"));
         list.add(new AdminPermissionOptionVO("course:edit", "课程编辑", "课程管理"));
+        // 试卷管理
+        list.add(new AdminPermissionOptionVO("paper:maintain", "真卷维护", "试卷管理"));
+        list.add(new AdminPermissionOptionVO("paper:publish", "试卷发布", "试卷管理"));
         // 用户管理（仅超管）
         list.add(new AdminPermissionOptionVO("admin:user:list", "管理员列表", "系统管理"));
         list.add(new AdminPermissionOptionVO("admin:user:edit", "管理员编辑", "系统管理"));

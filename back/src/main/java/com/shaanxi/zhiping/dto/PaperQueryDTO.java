@@ -13,6 +13,8 @@ public class PaperQueryDTO {
     private Long categoryId;
     /** 状态 0草稿 1已发布 */
     private Integer status;
+    /** 真题年份 */
+    private Integer year;
     /** 关键字（试卷名称） */
     private String keyword;
     /** 页码 */

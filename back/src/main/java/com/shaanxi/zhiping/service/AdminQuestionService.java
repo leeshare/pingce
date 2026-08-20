@@ -20,6 +20,7 @@ import com.shaanxi.zhiping.dto.QuestionReviewDTO;
 import com.shaanxi.zhiping.entity.Question;
 import com.shaanxi.zhiping.entity.QuestionDeleted;
 import com.shaanxi.zhiping.entity.QuestionImportBatch;
+import com.shaanxi.zhiping.entity.Paper;
 import com.shaanxi.zhiping.exception.BusinessException;
 import com.shaanxi.zhiping.mapper.QuestionDeletedMapper;
 import com.shaanxi.zhiping.mapper.QuestionImportBatchMapper;
@@ -69,6 +70,9 @@ public class AdminQuestionService {
 
     @Resource
     private RedisUtil redisUtil;
+
+    @Resource
+    private PaperService paperService;
 
     /** 题型名称 → 编码 */
     private static final Map<String, Integer> TYPE_NAME_MAP = new HashMap<>();
@@ -193,6 +197,11 @@ public class AdminQuestionService {
         if (ids.isEmpty()) {
             return false;
         }
+        // 引用校验：被任何试卷引用则禁止删除
+        List<Paper> refs = paperService.findPapersReferencing(ids);
+        if (!refs.isEmpty()) {
+            throw new BusinessException(buildReferencedMessage(refs));
+        }
         archiveAndDelete(ids);
         for (Long x : ids) {
             redisUtil.delete(CacheConstants.QUESTION_DETAIL_PREFIX + x);
@@ -220,6 +229,11 @@ public class AdminQuestionService {
             return 0;
         }
         List<Long> list = new java.util.ArrayList<>(all);
+        // 引用校验：被任何试卷引用则禁止删除
+        List<Paper> refs = paperService.findPapersReferencing(list);
+        if (!refs.isEmpty()) {
+            throw new BusinessException(buildReferencedMessage(refs));
+        }
         archiveAndDelete(list);
         for (Long x : list) {
             redisUtil.delete(CacheConstants.QUESTION_DETAIL_PREFIX + x);
@@ -227,6 +241,36 @@ public class AdminQuestionService {
         }
         invalidateCache();
         return list.size();
+    }
+
+    /**
+     * 构造"试题被试卷引用，禁止删除"的错误提示。
+     * 仅列出试卷 title（去重、按出现顺序），最多展示 5 个，避免消息过长。
+     */
+    private String buildReferencedMessage(List<Paper> refs) {
+        java.util.LinkedHashSet<String> titles = new java.util.LinkedHashSet<>();
+        for (Paper p : refs) {
+            if (p.getTitle() != null && !p.getTitle().isEmpty()) {
+                titles.add(p.getTitle());
+            } else {
+                titles.add("试卷#" + p.getId());
+            }
+        }
+        StringBuilder sb = new StringBuilder("试题已被以下试卷引用，无法删除：");
+        int i = 0;
+        for (String t : titles) {
+            if (i >= 5) {
+                sb.append(" 等").append(titles.size()).append("套试卷");
+                break;
+            }
+            if (i > 0) {
+                sb.append("、");
+            }
+            sb.append("「").append(t).append("」");
+            i++;
+        }
+        sb.append("；请先在「试卷管理」中移除相关题目或删除试卷后再试。");
+        return sb.toString();
     }
 
     /**
@@ -423,6 +467,8 @@ public class AdminQuestionService {
         int duplicateCount = 0;
         // 当前复合题父行 ID（0 表示不在复合题上下文中）；遇到下一个非空"题型"会重置
         long lastParentId = 0L;
+        // 本批次成功导入的"大题"ID（独立题 + 复合题大题，parentId=0），用于自动归集到 t_paper
+        List<Long> batchQuestionIds = new ArrayList<>();
         for (int i = 0; i < total; i++) {
             int excelRow = i + 2; // 第 1 行表头
             Map<String, Object> row = rows.get(i);
@@ -460,6 +506,10 @@ public class AdminQuestionService {
                 } else if (q.getParentId() == null || q.getParentId() == 0L) {
                     lastParentId = 0L;
                 }
+                // 仅收录大题（parentId=0）入试卷组成；子题不单独列入
+                if (q.getParentId() == null || q.getParentId() == 0L) {
+                    batchQuestionIds.add(q.getId());
+                }
                 batchSeenKeys.add(dedupKey);
                 successCount++;
             } catch (Exception e) {
@@ -482,6 +532,25 @@ public class AdminQuestionService {
         batchMapper.updateById(batch);
 
         invalidateCache();
+
+        // 自动归集到 t_paper：仅当批次提供了 year 与 categoryId（能唯一定位一套真卷）时触发
+        if (params.getYear() != null && params.getCategoryId() != null && !batchQuestionIds.isEmpty()) {
+            try {
+                Paper paper = paperService.upsertByBatch(
+                        params.getBizSection() == null ? 1 : params.getBizSection(),
+                        params.getCategoryId(),
+                        params.getYear(),
+                        params.getSource(),
+                        batchQuestionIds);
+                if (paper != null) {
+                    log.info("批次 {} 自动归集试卷成功 paperId={} questionCount={}",
+                            batchId, paper.getId(), batchQuestionIds.size());
+                }
+            } catch (Exception e) {
+                // 试卷归集失败不阻断导入主流程，仅记日志
+                log.error("批次 {} 自动归集试卷失败: {}", batchId, e.getMessage(), e);
+            }
+        }
 
         QuestionImportResultVO vo = new QuestionImportResultVO();
         vo.setBatchId(batchId);

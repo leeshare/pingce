@@ -5,7 +5,7 @@
 
     <select id="selectPaperPage" resultType="com.shaanxi.zhiping.entity.Paper">
         SELECT
-            id, biz_section, title, category_id, description, duration,
+            id, biz_section, title, category_id, year, source, description, duration,
             total_score, pass_score, question_ids, status, created_at, updated_at
         FROM t_paper
         WHERE deleted = 0
@@ -15,6 +15,9 @@
         <if test="q.categoryId != null">
             AND category_id = #{q.categoryId}
         </if>
+        <if test="q.year != null">
+            AND year = #{q.year}
+        </if>
         <if test="q.status != null">
             AND status = #{q.status}
         </if>
@@ -22,6 +25,21 @@
             AND title LIKE CONCAT('%', #{q.keyword}, '%')
         </if>
         ORDER BY id DESC
+    </select>
+
+    <!-- 反查：包含给定任一题目 ID 的试卷（FIND_IN_SET 精确匹配，避免子串误命中如 11 命中 1） -->
+    <select id="selectByQuestionIdIn" resultType="com.shaanxi.zhiping.entity.Paper">
+        SELECT
+            id, biz_section, title, category_id, year, source, description, duration,
+            total_score, pass_score, question_ids, status, created_at, updated_at
+        FROM t_paper
+        WHERE deleted = 0
+        <if test="ids != null and ids.size() > 0">
+            <foreach collection="ids" item="qid" open="AND (" separator=" OR " close=")">
+                FIND_IN_SET(#{qid}, question_ids) &gt; 0
+            </foreach>
+        </if>
+        ORDER BY id
     </select>
 
 </mapper>

@@ -27,6 +27,12 @@ public class Paper {
 
     private Long categoryId;
 
+    /** 真题年份 */
+    private Integer year;
+
+    /** 来源（如 2025年乙(A)试卷） */
+    private String source;
+
     private String description;
 
     /** 考试时长(分钟) */

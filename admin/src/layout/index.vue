@@ -63,6 +63,23 @@
           </el-menu-item>
         </el-sub-menu>
         <el-sub-menu
+          v-if="userStore.hasPermission('paper:maintain') || userStore.hasPermission('paper:publish')"
+          index="/paper"
+        >
+          <template #title>
+            <el-icon><Notebook /></el-icon>
+            <span>试卷管理</span>
+          </template>
+          <el-menu-item v-if="userStore.hasPermission('paper:maintain')" index="/paper/maintain">
+            <el-icon><Edit /></el-icon>
+            <span>真卷维护</span>
+          </el-menu-item>
+          <el-menu-item v-if="userStore.hasPermission('paper:publish')" index="/paper/publish">
+            <el-icon><Promotion /></el-icon>
+            <span>试卷发布</span>
+          </el-menu-item>
+        </el-sub-menu>
+        <el-sub-menu
           v-if="userStore.hasPermission('admin:user:list') || userStore.hasPermission('admin:student:list')"
           index="/user"
         >
