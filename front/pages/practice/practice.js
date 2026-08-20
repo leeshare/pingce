@@ -202,7 +202,7 @@ Page({
       for (let i = 0; i < q.subQuestions.length; i++) {
         const sub = q.subQuestions[i]
         const ans = this.data.subAnswers[i]
-        if (sub.type === '简答') {
+        if (sub.type === '简答' || sub.type === '填空') {
           if (!ans.text || !ans.text.trim()) {
             wx.showToast({ title: `请完成第 ${i + 1} 小题的作答`, icon: 'none' })
             return
@@ -285,9 +285,11 @@ Page({
   // 有参考答案时展示供对照，无参考答案时显示"无参考答案"
   gradeText(q) {
     const hasRef = this.hasCorrectAnswer(q)
+    const isCorrect = this.data.textAnswer.trim() === q.correct.trim();
     this.setData({
-      isCorrect: false,
-      noReference: true,  // 主观题始终不判对错
+      isCorrect: isCorrect,
+      //noReference: true,  // 主观题始终不判对错
+      noReference: isCorrect,
       userAnswerText: this.data.textAnswer.trim(),
       correctAnswerText: hasRef ? q.correct : '',
     })
@@ -347,7 +349,7 @@ Page({
       const hasRef = this.hasCorrectAnswer(sub)
       let userText, correctText, isCorrect, noRef
 
-      if (sub.type === '简答') {
+      if (sub.type === '简答' || sub.type === '填空') {
         // 主观题不判对错
         userText = ans.text.trim()
         correctText = hasRef ? sub.correct : ''

@@ -246,6 +246,10 @@
   background: var(--snx-card);
 }
 
+.input-textarea {
+  max-height: 2rpx;
+}
+
 .q-textarea {
   min-height: 240rpx;
 }

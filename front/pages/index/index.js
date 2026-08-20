@@ -128,7 +128,7 @@ Page({
 
   // 开始刷题
   goPractice() {
-    this.ensureLogin(() => wx.navigateTo({ url: '/pages/pastpapers/pastpapers' }))
+    this.ensureLogin(() => wx.navigateTo({ url: '/pages/practice_condition/practice_condition' }))
   },
 
   // 全真模考

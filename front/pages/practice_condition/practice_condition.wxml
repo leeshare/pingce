@@ -1,0 +1,72 @@
+<view class="page-pastpapers">
+  <!-- 副标题条（系统导航栏已提供返回 + 标题「历年真题」） -->
+  <view class="pp-subtitle-bar">
+    <text class="pp-subtitle">先选年份，再选科目，即可开始练习</text>
+  </view>
+
+  <scroll-view class="pp-body" scroll-y enhanced show-scrollbar="{{false}}">
+    <!-- 年份选择 -->
+    <view class="section">
+      <view class="section-header">
+        <text class="section-title">选择年份</text>
+        <text class="section-count">共 {{years.length}} 个年份</text>
+      </view>
+      <view class="year-scroll-wrap">
+        <scroll-view class="year-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+          <view
+            class="year-btn {{selectedYear === item ? 'year-btn-active' : ''}}"
+            wx:for="{{years}}"
+            wx:key="*this"
+            data-year="{{item}}"
+            bindtap="selectYear"
+          >{{item}}</view>
+        </scroll-view>
+        <view class="year-scroll-fade"></view>
+      </view>
+    </view>
+
+    <!-- 科目选择 -->
+    <view class="section">
+      <view class="section-header">
+        <text class="section-title">选择科目</text>
+        <text class="section-count">语数英</text>
+      </view>
+      <view class="subject-list">
+        <view
+          class="subject-card {{selectedSubject === item.name ? 'subject-card-active' : ''}}"
+          wx:for="{{subjects}}"
+          wx:key="name"
+          data-subject="{{item.name}}"
+          bindtap="selectSubject"
+        >
+          <view class="subject-icon {{item.iconBg}}">
+            <image class="subject-icon-img" src="{{item.icon}}" mode="aspectFit"></image>
+          </view>
+          <view class="subject-info">
+            <text class="subject-name">{{item.name}}</text>
+            <text class="subject-desc">{{item.desc}}</text>
+          </view>
+          <view class="subject-check" wx:if="{{selectedSubject === item.name}}">✓</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 已选信息 -->
+    <view class="section" wx:if="{{selectedYear && selectedSubject}}">
+      <view class="selected-info">
+        <text class="selected-info-icon">ℹ️</text>
+        <text class="selected-info-text">已选择：<text class="selected-bold">{{selectedYear}}</text> 年 · <text class="selected-bold">{{selectedSubject}}</text></text>
+      </view>
+    </view>
+
+    <view class="pp-bottom-space"></view>
+  </scroll-view>
+
+  <!-- 底部开始按钮 -->
+  <view class="pp-footer">
+    <view
+      class="start-btn {{selectedYear && selectedSubject ? 'start-btn-active' : 'start-btn-disabled'}}"
+      bindtap="startPractice"
+    >开始练习</view>
+  </view>
+</view>
