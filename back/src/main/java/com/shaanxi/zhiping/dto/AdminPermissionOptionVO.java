@@ -45,9 +45,14 @@ public class AdminPermissionOptionVO {
         // 院校管理
         list.add(new AdminPermissionOptionVO("college:list", "院校列表", "院校管理"));
         list.add(new AdminPermissionOptionVO("college:edit", "院校编辑", "院校管理"));
+        // 课程管理
+        list.add(new AdminPermissionOptionVO("course:list", "课程列表", "课程管理"));
+        list.add(new AdminPermissionOptionVO("course:edit", "课程编辑", "课程管理"));
         // 用户管理（仅超管）
         list.add(new AdminPermissionOptionVO("admin:user:list", "管理员列表", "系统管理"));
         list.add(new AdminPermissionOptionVO("admin:user:edit", "管理员编辑", "系统管理"));
+        // 学员管理
+        list.add(new AdminPermissionOptionVO("admin:student:list", "学员列表", "学员管理"));
         BUILTIN = java.util.Collections.unmodifiableList(list);
     }
 }

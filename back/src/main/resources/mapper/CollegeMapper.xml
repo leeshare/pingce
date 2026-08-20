@@ -8,7 +8,9 @@
         <result property="name" column="name"/>
         <result property="nature" column="nature"/>
         <result property="type" column="type"/>
+        <result property="level" column="level"/>
         <result property="isDoubleHigh" column="is_double_high"/>
+        <result property="province" column="province"/>
         <result property="city" column="city"/>
         <result property="logo" column="logo"/>
         <result property="majorCount" column="major_count"/>
@@ -21,7 +23,9 @@
             c.name,
             c.nature,
             c.type,
+            c.level,
             c.is_double_high,
+            c.province,
             c.city,
             c.logo,
             IFNULL(m.major_count, 0) AS major_count,

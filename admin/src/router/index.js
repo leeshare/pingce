@@ -68,10 +68,22 @@ const routes = [
         meta: { title: '院校管理', icon: 'School', permission: 'college:list' },
       },
       {
+        path: 'course/list',
+        name: 'CourseList',
+        component: () => import('@/views/course/list.vue'),
+        meta: { title: '课程管理', icon: 'Reading', permission: 'course:list' },
+      },
+      {
         path: 'user/list',
         name: 'UserList',
         component: () => import('@/views/user/list.vue'),
         meta: { title: '用户管理', icon: 'User', permission: 'admin:user:list' },
+      },
+      {
+        path: 'student/list',
+        name: 'StudentList',
+        component: () => import('@/views/student/list.vue'),
+        meta: { title: '学员列表', icon: 'UserFilled', permission: 'admin:student:list' },
       },
     ],
   },

@@ -45,14 +45,40 @@
             <span>试题审核</span>
           </el-menu-item>
         </el-sub-menu>
-        <el-menu-item v-if="userStore.hasPermission('college:list')" index="/college/list">
-          <el-icon><School /></el-icon>
-          <span>院校管理</span>
-        </el-menu-item>
-        <el-menu-item v-if="userStore.hasPermission('admin:user:list')" index="/user/list">
-          <el-icon><User /></el-icon>
-          <span>用户管理</span>
-        </el-menu-item>
+        <el-sub-menu
+          v-if="userStore.hasPermission('college:list') || userStore.hasPermission('course:list')"
+          index="/content"
+        >
+          <template #title>
+            <el-icon><Reading /></el-icon>
+            <span>内容管理</span>
+          </template>
+          <el-menu-item v-if="userStore.hasPermission('college:list')" index="/college/list">
+            <el-icon><School /></el-icon>
+            <span>院校管理</span>
+          </el-menu-item>
+          <el-menu-item v-if="userStore.hasPermission('course:list')" index="/course/list">
+            <el-icon><VideoCamera /></el-icon>
+            <span>课程管理</span>
+          </el-menu-item>
+        </el-sub-menu>
+        <el-sub-menu
+          v-if="userStore.hasPermission('admin:user:list') || userStore.hasPermission('admin:student:list')"
+          index="/user"
+        >
+          <template #title>
+            <el-icon><User /></el-icon>
+            <span>用户管理</span>
+          </template>
+          <el-menu-item v-if="userStore.hasPermission('admin:user:list')" index="/user/list">
+            <el-icon><Avatar /></el-icon>
+            <span>管理员列表</span>
+          </el-menu-item>
+          <el-menu-item v-if="userStore.hasPermission('admin:student:list')" index="/student/list">
+            <el-icon><UserFilled /></el-icon>
+            <span>学员列表</span>
+          </el-menu-item>
+        </el-sub-menu>
       </el-menu>
     </el-aside>
 

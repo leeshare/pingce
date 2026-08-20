@@ -11,7 +11,9 @@ public class CollegeListVO {
     private String name;
     private String nature;
     private String type;
+    private String level;
     private Integer isDoubleHigh;
+    private String province;
     private String city;
     private String logo;
     /** 专业数量（冗余字段，方便前端展示，无则 0） */

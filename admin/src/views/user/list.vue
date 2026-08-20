@@ -70,7 +70,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="lastLoginAt" label="最后登录" width="170" />
+        <el-table-column prop="lastLoginAt" label="最后登录" width="190" />
         <el-table-column prop="createdAt" label="创建时间" width="170" />
         <el-table-column label="操作" width="260" fixed="right">
           <template #default="{ row }">

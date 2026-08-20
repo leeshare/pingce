@@ -247,20 +247,24 @@ CREATE TABLE IF NOT EXISTS `t_lead` (
 
 -- 14. 课程表
 CREATE TABLE IF NOT EXISTS `t_course` (
-    `id`          BIGINT       NOT NULL AUTO_INCREMENT,
-    `title`       VARCHAR(128) NOT NULL COMMENT '课程名称',
-    `cover`       VARCHAR(512) DEFAULT NULL COMMENT '封面图',
-    `intro`       TEXT         DEFAULT NULL COMMENT '课程介绍',
-    `price`       DECIMAL(10,2) DEFAULT NULL COMMENT '课程价格',
-    `location`    VARCHAR(128) DEFAULT NULL COMMENT '上课地点',
-    `teacher`     VARCHAR(64)  DEFAULT NULL COMMENT '授课老师',
-    `start_date`  DATE         DEFAULT NULL COMMENT '开课日期',
-    `status`      TINYINT      DEFAULT 1 COMMENT '状态 0下架 1上架',
-    `created_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `deleted`     TINYINT      NOT NULL DEFAULT 0,
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='线下课程表';
+    `id`           BIGINT       NOT NULL AUTO_INCREMENT,
+    `title`        VARCHAR(128) NOT NULL COMMENT '课程名称',
+    `category`     VARCHAR(32)  DEFAULT NULL COMMENT '课程分类 语文/数学/英语/面试技巧',
+    `cover`        VARCHAR(512) DEFAULT NULL COMMENT '封面图',
+    `intro`        TEXT         DEFAULT NULL COMMENT '课程介绍',
+    `lesson_count` INT          DEFAULT 0 COMMENT '课程节数',
+    `price`        DECIMAL(10,2) DEFAULT 0 COMMENT '课程价格 0为免费',
+    `location`     VARCHAR(128) DEFAULT NULL COMMENT '上课地点',
+    `teacher`      VARCHAR(64)  DEFAULT NULL COMMENT '授课老师',
+    `start_date`   DATE         DEFAULT NULL COMMENT '开课日期',
+    `status`       TINYINT      DEFAULT 1 COMMENT '状态 0下架 1上架',
+    `created_at`   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted`      TINYINT      NOT NULL DEFAULT 0,
+    PRIMARY KEY (`id`),
+    KEY `idx_category` (`category`),
+    KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='课程表';
 
 -- 15. 收藏表
 CREATE TABLE IF NOT EXISTS `t_favorite` (

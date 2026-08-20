@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shaanxi.zhiping.mapper.UserMapper">
+
+    <!-- 学员列表分页：t_user LEFT JOIN t_practice_record 聚合统计 -->
+    <select id="selectStudentPage" resultType="com.shaanxi.zhiping.dto.StudentVO">
+        SELECT
+            u.id,
+            u.nickname,
+            u.avatar,
+            u.phone,
+            u.gender,
+            u.identity,
+            u.province,
+            u.city,
+            u.district,
+            u.school,
+            u.grade,
+            u.target_major     AS targetMajor,
+            u.member_level     AS memberLevel,
+            u.member_expire_time AS memberExpireTime,
+            u.created_at       AS createdAt,
+            IFNULL(s.total_practice, 0)   AS totalPractice,
+            s.last_practice_at            AS lastPracticeAt,
+            CASE
+                WHEN IFNULL(s.total_practice, 0) = 0 THEN 0
+                ELSE ROUND(s.correct_count * 100.0 / s.total_practice)
+            END AS correctRate
+        FROM t_user u
+        LEFT JOIN (
+            SELECT
+                user_id,
+                COUNT(*) AS total_practice,
+                SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END) AS correct_count,
+                MAX(created_at) AS last_practice_at
+            FROM t_practice_record
+            GROUP BY user_id
+        ) s ON s.user_id = u.id
+        WHERE u.deleted = 0
+        <if test="q.keyword != null and q.keyword != ''">
+            AND (u.nickname LIKE CONCAT('%', #{q.keyword}, '%')
+                 OR u.phone LIKE CONCAT('%', #{q.keyword}, '%'))
+        </if>
+        <if test="q.identity != null and q.identity != ''">
+            AND u.identity = #{q.identity}
+        </if>
+        <if test="q.memberLevel != null">
+            AND u.member_level = #{q.memberLevel}
+        </if>
+        <if test="q.province != null and q.province != ''">
+            AND u.province = #{q.province}
+        </if>
+        <if test="q.school != null and q.school != ''">
+            AND u.school LIKE CONCAT('%', #{q.school}, '%')
+        </if>
+        ORDER BY u.id DESC
+    </select>
+
+</mapper>
