@@ -12,6 +12,10 @@
     "pages/pastpapers/pastpapers",
     "pages/practice_condition/practice_condition",
     "pages/practice/practice",
+    "pages/mockexam_condition/mockexam_condition",
+    "pages/mockexam/mockexam",
+    "pages/exam_history/exam_history",
+    "pages/exam_detail/exam_detail",
     "pages/mine/mine"
   ],
   "window": {

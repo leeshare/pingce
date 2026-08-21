@@ -58,7 +58,7 @@
   <view class="countdown-card">
     <view class="countdown-top">
       <view class="countdown-info">
-        <text class="countdown-label">距 2027 年单招考试</text>
+        <text class="countdown-label">距 {{examYear}} 年单招考试</text>
         <text class="countdown-num">还有 {{examDaysLeft}} 天</text>
         <text class="countdown-desc">今日完成 {{stats.today}} 题 · 击败 {{beatPercent}}% 学员</text>
       </view>

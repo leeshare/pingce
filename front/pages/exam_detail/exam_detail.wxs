@@ -1,0 +1,41 @@
+// pages/exam_detail/exam_detail.wxs
+// 选项状态判断（只读视图，只需 isOptionCorrect / isSubOptionCorrect）
+
+// 普通题：是否为正确选项
+var isOptionCorrect = function (question, idx) {
+  if (!question) return false
+  var correct = question.correct
+  var opt = question.options[idx]
+  if (!opt) return false
+  var key = opt.letter || opt.text
+  if (Object.prototype.toString.call(correct) === '[object Array]') {
+    for (var i = 0; i < correct.length; i++) {
+      if (key === correct[i]) return true
+    }
+  } else {
+    return key === correct
+  }
+  return false
+}
+
+// 子题：是否为正确选项
+var isSubOptionCorrect = function (sub, idx) {
+  if (!sub) return false
+  var correct = sub.correct
+  var opt = sub.options[idx]
+  if (!opt) return false
+  var key = opt.letter || opt.text
+  if (Object.prototype.toString.call(correct) === '[object Array]') {
+    for (var i = 0; i < correct.length; i++) {
+      if (key === correct[i]) return true
+    }
+  } else {
+    return key === correct
+  }
+  return false
+}
+
+module.exports = {
+  isOptionCorrect: isOptionCorrect,
+  isSubOptionCorrect: isSubOptionCorrect,
+}

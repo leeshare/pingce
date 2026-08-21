@@ -109,6 +109,7 @@ function adaptQuestion(vo) {
   const item = {
     id: vo.id,
     type,
+    typeRaw: vo.type,
     typeTag: vo.typeLabel || (type + '题'),
     score: Number(vo.score) || 0,
     title: type === '复合' ? undefined : vo.content,
@@ -141,6 +142,7 @@ function adaptSubQuestion(vo) {
   const item = {
     id: vo.id,
     type,
+    typeRaw: vo.type,
     typeTag: vo.typeLabel || (type + '题'),
     title: vo.content,
     correct: normalizeAnswer(vo.answer, type, options),

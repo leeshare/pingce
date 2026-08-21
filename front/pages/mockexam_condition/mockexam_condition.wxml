@@ -1,0 +1,90 @@
+<view class="page-mockexam">
+  <!-- 副标题条（系统导航栏已提供返回 + 标题「全真模考」） -->
+  <view class="me-subtitle-bar">
+    <text class="me-subtitle">按年份与科目参加全真模拟考试</text>
+  </view>
+
+  <scroll-view class="me-body" scroll-y enhanced show-scrollbar="{{false}}">
+    <!-- 考试倒计时 -->
+    <view class="countdown-card">
+      <view class="countdown-header">
+        <text class="countdown-icon">⏰</text>
+        <text class="countdown-label">考试倒计时</text>
+      </view>
+      <text class="countdown-text">距 {{examYear}} 陕西综评单招考试还有 {{examDaysLeft}} 天</text>
+    </view>
+
+    <!-- 模考说明 -->
+    <view class="info-card">
+      <text class="info-title">模考说明</text>
+      <view class="info-grid">
+        <view class="info-item">
+          <text class="info-item-label">考试时间</text>
+          <text class="info-item-value">{{examDuration}} 分钟</text>
+        </view>
+        <view class="info-item">
+          <text class="info-item-label">题目数量</text>
+          <text class="info-item-value">{{examQuestionCount}} 题</text>
+        </view>
+        <view class="info-item">
+          <text class="info-item-label">卷面满分</text>
+          <text class="info-item-value">{{examTotalScore}} 分</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 模考试卷列表 -->
+    <view class="papers-section">
+      <text class="papers-section-title">模考试卷</text>
+
+      <!-- 加载中 -->
+      <view class="loading-wrap" wx:if="{{loading}}">
+        <text class="loading-text">加载中...</text>
+      </view>
+
+      <!-- 加载失败 -->
+      <view class="error-wrap" wx:elif="{{loadError}}">
+        <text class="error-text">加载失败，请下拉重试</text>
+      </view>
+
+      <!-- 空列表 -->
+      <view class="empty-wrap" wx:elif="{{papers.length === 0}}">
+        <text class="empty-text">暂无模考试卷</text>
+      </view>
+
+      <!-- 试卷卡片列表 -->
+      <view class="paper-list" wx:else>
+        <view class="paper-card" wx:for="{{papers}}" wx:key="id">
+          <view class="paper-card-header">
+            <text class="paper-title">{{item.title}}</text>
+            <view class="paper-meta">
+              <text class="paper-tag paper-tag-{{item.difficultyType}}">{{item.difficultyLabel}}</text>
+              <text class="paper-info">{{item.questionCount}} 题 · 预计 {{item.duration}} 分钟</text>
+            </view>
+          </view>
+          <view class="paper-card-footer">
+            <view class="paper-reference">
+              <text class="paper-reference-icon">👥</text>
+              <text class="paper-reference-text">已有 {{item.referenceCount}} 人参考</text>
+            </view>
+            <view class="paper-start-btn" data-id="{{item.id}}" data-title="{{item.title}}" data-duration="{{item.duration}}" bindtap="startExam">开始考试</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 查看历史成绩 -->
+    <view class="history-entry" bindtap="goHistory">
+      <view class="history-entry-left">
+        <view class="history-entry-icon">📊</view>
+        <view class="history-entry-info">
+          <text class="history-entry-title">查看历史成绩</text>
+          <text class="history-entry-desc">回顾过往模考记录与得分趋势</text>
+        </view>
+      </view>
+      <text class="history-entry-arrow">›</text>
+    </view>
+
+    <view class="me-bottom-space"></view>
+  </scroll-view>
+</view>

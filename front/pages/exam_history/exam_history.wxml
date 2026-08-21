@@ -1,0 +1,51 @@
+<!-- pages/exam_history/exam_history.wxml -->
+<wxs src="./exam_history.wxs" module="fmt" />
+
+<view class="page-history">
+  <!-- 加载中 -->
+  <view class="state-wrap" wx:if="{{loading}}">
+    <view class="loading-text">加载中...</view>
+  </view>
+
+  <!-- 加载失败 -->
+  <view class="state-wrap" wx:elif="{{loadError}}">
+    <view class="error-text">加载失败</view>
+    <view class="retry-btn" bindtap="retry">重试</view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="state-wrap" wx:elif="{{records.length === 0}}">
+    <view class="empty-icon">📝</view>
+    <view class="empty-text">暂无历史成绩</view>
+    <view class="empty-desc">完成模拟考试后可在此查看记录</view>
+  </view>
+
+  <!-- 记录列表 -->
+  <scroll-view scroll-y class="history-list" wx:else>
+    <view class="record-card" wx:for="{{records}}" wx:key="id" data-id="{{item.id}}" bindtap="gotoDetail">
+      <view class="record-header">
+        <text class="record-title">{{item.paperTitle || '模拟考试'}}</text>
+        <view class="record-score {{item.isPass ? 'pass' : 'fail'}}">
+          <text class="score-value">{{item.score}}</text>
+          <text class="score-total">/{{item.totalScore || 0}}</text>
+        </view>
+      </view>
+      <view class="record-meta">
+        <view class="meta-item">
+          <text class="meta-label">用时</text>
+          <text class="meta-value">{{fmt.formatDuration(item.duration)}}</text>
+        </view>
+        <view class="meta-divider"></view>
+        <view class="meta-item">
+          <text class="meta-label">交卷时间</text>
+          <text class="meta-value">{{item.submitTime}}</text>
+        </view>
+      </view>
+      <view class="record-arrow">
+        <text class="arrow-text">查看作答详情</text>
+        <text class="arrow-icon">›</text>
+      </view>
+    </view>
+    <view class="bottom-space"></view>
+  </scroll-view>
+</view>

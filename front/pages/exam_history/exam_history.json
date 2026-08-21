@@ -1,0 +1,6 @@
+{
+  "usingComponents": {},
+  "navigationBarTitleText": "历史成绩",
+  "enablePullDownRefresh": true,
+  "backgroundColor": "#f7f6f3"
+}

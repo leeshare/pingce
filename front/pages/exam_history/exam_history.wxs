@@ -1,0 +1,15 @@
+// pages/exam_history/exam_history.wxs
+// 格式化用时（秒 → X分Y秒）
+function formatDuration(sec) {
+  if (!sec || sec <= 0) return '0分'
+  var m = Math.floor(sec / 60)
+  var s = sec % 60
+  var result = ''
+  if (m > 0) result = result + m + '分'
+  if (s > 0) result = result + s + '秒'
+  return result || '0分'
+}
+
+module.exports = {
+  formatDuration: formatDuration,
+}

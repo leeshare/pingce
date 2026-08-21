@@ -281,18 +281,29 @@ Page({
     }
   },
 
-  // 判分：简答/计算（主观题，不自动判对错）
-  // 有参考答案时展示供对照，无参考答案时显示"无参考答案"
+  // 判分：简答/计算（主观题）
+  // 有参考答案时：忽略大小写、空白后完全相等算对；答错时上报错题
+  // 无参考答案时：显示"无参考答案"，不判对错
   gradeText(q) {
     const hasRef = this.hasCorrectAnswer(q)
-    const isCorrect = this.data.textAnswer.trim() === q.correct.trim();
+    const userText = this.data.textAnswer.trim()
+    let isCorrect = false
+    if (hasRef && userText) {
+      const normUser = userText.toLowerCase().replace(/\s+/g, ' ')
+      const normCorrect = String(q.correct).trim().toLowerCase().replace(/\s+/g, ' ')
+      isCorrect = normUser === normCorrect
+    }
     this.setData({
-      isCorrect: isCorrect,
-      //noReference: true,  // 主观题始终不判对错
-      noReference: isCorrect,
-      userAnswerText: this.data.textAnswer.trim(),
+      isCorrect,
+      noReference: !hasRef,
+      userAnswerText: userText,
       correctAnswerText: hasRef ? q.correct : '',
     })
+
+    // 错题上报：题库录入了正确答案且答错时上报；无正确答案不调用错题api
+    if (!isCorrect && hasRef && q.id) {
+      this.reportWrongQuestion(q.id)
+    }
   },
 
   // 判分：填空题

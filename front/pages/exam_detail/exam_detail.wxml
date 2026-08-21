@@ -1,0 +1,99 @@
+<!-- pages/exam_detail/exam_detail.wxml -->
+<wxs src="./exam_detail.wxs" module="q" />
+
+<view class="page-detail">
+  <view class="d-header">
+    <view class="d-header-title">{{paperTitle}}</view>
+    <view class="d-header-meta">
+      <view class="d-meta-item">
+        <text class="d-meta-label">得分</text>
+        <text class="d-meta-value {{isPass ? 'value-pass' : 'value-fail'}}">{{score}} / {{totalScore}}</text>
+      </view>
+      <view class="d-meta-divider"></view>
+      <view class="d-meta-item">
+        <text class="d-meta-label">用时</text>
+        <text class="d-meta-value">{{duration}}秒</text>
+      </view>
+      <view class="d-meta-divider"></view>
+      <view class="d-meta-item">
+        <text class="d-meta-label">交卷时间</text>
+        <text class="d-meta-value">{{submitTime}}</text>
+      </view>
+    </view>
+    <view class="d-progress-row">
+      <text class="d-progress-text">第 {{current + 1}} / {{questions.length}} 题</text>
+    </view>
+    <view class="d-progress-bar">
+      <view class="d-progress-inner" style="width: {{progressPercent}}%;"></view>
+    </view>
+  </view>
+
+  <view class="state-wrap" wx:if="{{loading}}">
+    <view class="state-text">加载中...</view>
+  </view>
+  <view class="state-wrap" wx:elif="{{loadError}}">
+    <view class="state-text">加载失败</view>
+    <view class="state-btn" bindtap="retry">重试</view>
+  </view>
+  <view class="state-wrap" wx:elif="{{emptyData}}">
+    <view class="state-text">暂无作答数据</view>
+  </view>
+  <block wx:else>
+    <scroll-view class="d-body" scroll-y enhanced show-scrollbar="{{false}}">
+      <view class="d-card">
+        <view class="d-tags">
+          <text class="d-type-tag">{{question.typeTag}}</text>
+          <text class="d-score-tag">{{question.score}}分</text>
+        </view>
+        <view class="d-title">{{question.title}}</view>
+
+        <view class="d-material" wx:if="{{question.material}}">{{question.material}}</view>
+
+        <view class="sub-feedback-list" wx:if="{{isComposite}}">
+          <view class="sub-feedback-item" wx:for="{{feedback.subFeedbacks}}" wx:key="index" wx:for-item="sub" wx:for-index="sIdx">
+            <view class="sub-feedback-head">
+              <text class="sub-feedback-label">第 {{sIdx + 1}} 小题</text>
+              <text class="sub-feedback-result {{sub.tagClass}}">{{sub.status}}</text>
+            </view>
+            <view class="d-sub-title">{{sub.title}}</view>
+            <view class="d-option-list" wx:if="{{sub.hasOptions}}">
+              <view class="d-option {{q.isSubOptionCorrect(sub, oIdx) ? 'option-correct' : ''}}" wx:for="{{sub.options}}" wx:key="*this" wx:for-item="opt" wx:for-index="oIdx">
+                <view class="d-option-badge">{{opt.letter}}</view>
+                <text class="d-option-text">{{opt.text}}</text>
+              </view>
+            </view>
+            <view class="d-feedback-line"><text class="d-feedback-label">你的答案：</text><text class="d-feedback-value">{{sub.userAnswer}}</text></view>
+            <view class="d-feedback-line"><text class="d-feedback-label">正确答案：</text><text class="d-feedback-value feedback-bold">{{sub.correctAnswer}}</text></view>
+            <view class="d-feedback-line" wx:if="{{sub.analysis}}"><text class="d-feedback-label">解析：</text><text class="d-feedback-analysis">{{sub.analysis}}</text></view>
+          </view>
+        </view>
+
+        <view class="d-option-list" wx:if="{{isChoice}}">
+          <view class="d-option {{q.isOptionCorrect(question, oIdx) ? 'option-correct' : ''}}" wx:for="{{question.options}}" wx:key="*this" wx:for-item="opt" wx:for-index="oIdx">
+            <view class="d-option-badge">{{opt.letter}}</view>
+            <text class="d-option-text">{{opt.text}}</text>
+          </view>
+        </view>
+
+        <view class="d-feedback" wx:if="{{!isComposite}}">
+          <view class="d-feedback-summary">
+            <view class="summary-icon {{feedback.iconClass}}">{{feedback.iconText}}</view>
+            <text class="summary-text {{feedback.textClass}}">{{feedback.statusText}}</text>
+          </view>
+          <view class="d-feedback-item">
+            <view class="d-feedback-line"><text class="d-feedback-label">你的答案：</text><text class="d-feedback-value">{{feedback.userAnswerText}}</text></view>
+            <view class="d-feedback-line"><text class="d-feedback-label">正确答案：</text><text class="d-feedback-value feedback-bold">{{feedback.correctAnswerText}}</text></view>
+            <view class="d-feedback-line" wx:if="{{question.analysis}}"><text class="d-feedback-label">解析：</text><text class="d-feedback-analysis">{{question.analysis}}</text></view>
+          </view>
+        </view>
+      </view>
+
+      <view class="d-bottom-space"></view>
+    </scroll-view>
+
+    <view class="d-footer">
+      <view class="d-footer-btn btn-prev {{current === 0 ? 'btn-disabled' : ''}}" bindtap="prevQuestion">上一题</view>
+      <view class="d-footer-btn btn-next {{current === questions.length - 1 ? 'btn-disabled' : ''}}" bindtap="nextQuestion">下一题</view>
+    </view>
+  </block>
+</view>

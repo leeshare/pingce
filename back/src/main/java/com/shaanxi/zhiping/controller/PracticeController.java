@@ -1,12 +1,15 @@
 package com.shaanxi.zhiping.controller;
 
 import com.shaanxi.zhiping.common.Result;
+import com.shaanxi.zhiping.dto.PracticeGradeDTO;
+import com.shaanxi.zhiping.dto.PracticeGradeResultVO;
 import com.shaanxi.zhiping.dto.PracticeQueryDTO;
 import com.shaanxi.zhiping.dto.PracticeQuestionVO;
 import com.shaanxi.zhiping.service.PracticeService;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -40,6 +43,18 @@ public class PracticeController {
     }
 
     /**
+     * 按 t_paper.question_ids 拉取一套试卷的题目（用于全真模考）
+     * GET /api/practice/paper/{paperId}
+     *
+     * @param paperId 试卷ID
+     * @return 题目列表（复合题子题已嵌套），按 question_ids 顺序
+     */
+    @GetMapping("/paper/{paperId}")
+    public Result<List<PracticeQuestionVO>> paper(@PathVariable Long paperId) {
+        return Result.success(practiceService.listPaperById(paperId));
+    }
+
+    /**
      * 单题详情（含复合题子题）
      * GET /api/practice/{id}
      *
@@ -48,5 +63,22 @@ public class PracticeController {
     @GetMapping("/{id}")
     public Result<PracticeQuestionVO> detail(@PathVariable Long id) {
         return Result.success(practiceService.detail(id));
+    }
+
+    /**
+     * 批量判分并记录错题
+     * POST /api/practice/grade
+     *
+     * 适用于模拟考试整卷提交、真题练习逐题提交。
+     * 后端统一判分，答错且有正确答案的题目自动记录到 t_wrong_question。
+     *
+     * @param dto     用户作答数据
+     * @param request HTTP 请求（取 userId）
+     * @return 判分结果（每题 isCorrect/noReference/答案 + 汇总）
+     */
+    @PostMapping("/grade")
+    public Result<PracticeGradeResultVO> grade(@RequestBody PracticeGradeDTO dto, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        return Result.success(practiceService.grade(dto, userId));
     }
 }

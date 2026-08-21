@@ -12,13 +12,18 @@ function buildGreeting() {
   return '晚上好'
 }
 
-// 距目标考试日期的天数
-function daysUntil(dateStr) {
-  const target = new Date(dateStr + 'T00:00:00')
+// 距下一个 3 月 15 日（陕西综评单招考试）的天数与年份
+// 当前日期超过本年 3 月 15 日则按次年计算
+function nextExamDate() {
   const now = new Date()
   now.setHours(0, 0, 0, 0)
-  const diff = Math.ceil((target - now) / (24 * 60 * 60 * 1000))
-  return diff > 0 ? diff : 0
+  const year = now.getFullYear()
+  let target = new Date(year, 2, 15, 0, 0, 0)
+  if (target.getTime() < now.getTime()) {
+    target = new Date(year + 1, 2, 15, 0, 0, 0)
+  }
+  const diff = Math.ceil((target.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
+  return { days: diff > 0 ? diff : 0, year: target.getFullYear() }
 }
 
 Page({
@@ -34,6 +39,7 @@ Page({
     },
     // 设计稿新增字段
     examDaysLeft: 0,
+    examYear: '',
     beatPercent: 62,
     wrongCount: 23,
     knowledgeCount: 56,
@@ -63,9 +69,11 @@ Page({
   },
 
   onLoad() {
+    const exam = nextExamDate()
     this.setData({
       greeting: buildGreeting(),
-      examDaysLeft: daysUntil('2027-04-10'),
+      examDaysLeft: exam.days,
+      examYear: exam.year,
     })
     this.refreshUserState()
   },
@@ -133,7 +141,7 @@ Page({
 
   // 全真模考
   goExam() {
-    this.ensureLogin(() => wx.navigateTo({ url: '/pages/exam/exam' }))
+    this.ensureLogin(() => wx.navigateTo({ url: '/pages/mockexam_condition/mockexam_condition' }))
   },
 
   // 错题本
