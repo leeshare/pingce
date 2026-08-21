@@ -5,6 +5,7 @@
 
     <resultMap id="CollegeListVOMap" type="com.shaanxi.zhiping.dto.CollegeListVO">
         <id property="id" column="id"/>
+        <result property="seq" column="seq"/>
         <result property="name" column="name"/>
         <result property="nature" column="nature"/>
         <result property="type" column="type"/>
@@ -13,6 +14,8 @@
         <result property="province" column="province"/>
         <result property="city" column="city"/>
         <result property="logo" column="logo"/>
+        <result property="plan" column="plan"/>
+        <result property="category" column="category"/>
         <result property="majorCount" column="major_count"/>
         <result property="initial" column="initial"/>
     </resultMap>
@@ -20,6 +23,7 @@
     <select id="selectCollegePage" resultMap="CollegeListVOMap">
         SELECT
             c.id,
+            c.seq,
             c.name,
             c.nature,
             c.type,
@@ -28,6 +32,8 @@
             c.province,
             c.city,
             c.logo,
+            c.plan,
+            c.category,
             IFNULL(m.major_count, 0) AS major_count,
             LEFT(c.name, 1) AS initial
         FROM t_college c
@@ -59,7 +65,7 @@
                 c.is_double_high DESC, m.major_count DESC
             </when>
             <otherwise>
-                c.id ASC
+                c.seq ASC, c.id ASC
             </otherwise>
         </choose>
     </select>

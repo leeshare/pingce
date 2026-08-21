@@ -19,6 +19,9 @@ public class College {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 序号 */
+    private Integer seq;
+
     private String name;
 
     private String code;
@@ -42,6 +45,12 @@ public class College {
     private String logo;
 
     private String intro;
+
+    /** 招生计划 */
+    private Integer plan;
+
+    /** 院校类别 国家示范/双高、省级示范等 */
+    private String category;
 
     @TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)
     private LocalDateTime createdAt;

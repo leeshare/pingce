@@ -12,6 +12,9 @@ public class CollegeCreateDTO {
 
     private Long id;
 
+    /** 序号 */
+    private Integer seq;
+
     @NotBlank(message = "院校名称不能为空")
     private String name;
 
@@ -39,4 +42,10 @@ public class CollegeCreateDTO {
 
     /** 院校简介 */
     private String intro;
+
+    /** 招生计划 */
+    private Integer plan;
+
+    /** 院校类别 国家示范/双高、省级示范等 */
+    private String category;
 }

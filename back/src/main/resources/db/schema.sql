@@ -148,6 +148,7 @@ CREATE TABLE IF NOT EXISTS `t_exam_record` (
 -- 8. 院校表
 CREATE TABLE IF NOT EXISTS `t_college` (
     `id`             BIGINT       NOT NULL AUTO_INCREMENT,
+    `seq`            INT          DEFAULT NULL COMMENT '序号',
     `name`           VARCHAR(128) NOT NULL COMMENT '院校名称',
     `code`           VARCHAR(32)  DEFAULT NULL COMMENT '院校代码',
     `nature`         VARCHAR(16)  DEFAULT NULL COMMENT '办学性质 公办/民办',
@@ -158,6 +159,8 @@ CREATE TABLE IF NOT EXISTS `t_college` (
     `city`           VARCHAR(32)  DEFAULT NULL COMMENT '城市',
     `logo`           VARCHAR(512) DEFAULT NULL COMMENT '院校logo',
     `intro`          TEXT         DEFAULT NULL COMMENT '院校简介',
+    `plan`           INT          DEFAULT NULL COMMENT '招生计划',
+    `category`       VARCHAR(32)  DEFAULT NULL COMMENT '院校类别 国家示范/双高、省级示范等',
     `created_at`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deleted`        TINYINT      NOT NULL DEFAULT 0,

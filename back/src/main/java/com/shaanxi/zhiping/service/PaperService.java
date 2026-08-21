@@ -141,16 +141,42 @@ public class PaperService {
 
     /**
      * 新增试卷
+     *
+     * 若创建时即指定为"已发布"（status=1），同样需通过发布前校验。
      */
     public Long create(Paper paper) {
+        if (paper.getStatus() != null && paper.getStatus() == 1) {
+            // 先 insert 拿到 id，再校验，校验失败回滚事务
+            paper.setStatus(0);
+            paperMapper.insert(paper);
+            try {
+                checkAllQuestionsApproved(paper.getId());
+                Paper patch = new Paper();
+                patch.setId(paper.getId());
+                patch.setStatus(1);
+                paperMapper.updateById(patch);
+                paper.setStatus(1);
+            } catch (com.shaanxi.zhiping.exception.BusinessException e) {
+                // 校验失败：删除刚插入的草稿试卷，抛出原异常
+                paperMapper.deleteById(paper.getId());
+                throw e;
+            }
+            return paper.getId();
+        }
         paperMapper.insert(paper);
         return paper.getId();
     }
 
     /**
      * 更新试卷
+     *
+     * 若更新后的状态为"已发布"（status=1），同样需通过发布前校验：
+     * 试卷关联的所有试题（含复合题子题）必须均为"已通过"状态。
      */
     public boolean update(Paper paper) {
+        if (paper.getStatus() != null && paper.getStatus() == 1) {
+            checkAllQuestionsApproved(paper.getId());
+        }
         boolean ok = paperMapper.updateById(paper) > 0;
         if (ok) {
             redisUtil.delete(CacheConstants.PAPER_DETAIL_PREFIX + paper.getId());
@@ -171,8 +197,14 @@ public class PaperService {
 
     /**
      * 切换发布状态（0草稿 1已发布），同时清缓存
+     *
+     * 发布前校验：试卷关联的所有试题（含复合题子题）必须均为"已通过"状态（status=2），
+     * 否则抛出 BusinessException 阻止发布。
      */
     public boolean updateStatus(Long id, Integer status) {
+        if (status != null && status == 1) {
+            checkAllQuestionsApproved(id);
+        }
         Paper patch = new Paper();
         patch.setId(id);
         patch.setStatus(status);
@@ -181,6 +213,82 @@ public class PaperService {
             redisUtil.delete(CacheConstants.PAPER_DETAIL_PREFIX + id);
         }
         return ok;
+    }
+
+    /**
+     * 校验试卷下所有试题均为"已通过"状态（status=2）。
+     * - 解析 paper.question_ids，批量查询大题/独立题
+     * - 复合题大题（type=7）需进一步查子题，子题状态也必须为 2
+     * - 已物理删除的题目（selectBatchIds 查不到）自动跳过
+     * - 任一试题非"已通过"则抛 BusinessException，错误信息包含具体题号与当前状态
+     */
+    private void checkAllQuestionsApproved(Long paperId) {
+        Paper paper = paperMapper.selectById(paperId);
+        if (paper == null) {
+            throw new com.shaanxi.zhiping.exception.BusinessException("试卷不存在");
+        }
+        String idsStr = paper.getQuestionIds();
+        if (idsStr == null || idsStr.trim().isEmpty()) {
+            throw new com.shaanxi.zhiping.exception.BusinessException("试卷未关联任何试题，无法发布");
+        }
+
+        // 1) 解析题目 ID（去重保持顺序）
+        LinkedHashSet<Long> idSet = new LinkedHashSet<>();
+        for (String s : idsStr.split(",")) {
+            if (s == null || s.trim().isEmpty()) continue;
+            try {
+                idSet.add(Long.parseLong(s.trim()));
+            } catch (NumberFormatException ignore) {
+            }
+        }
+        if (idSet.isEmpty()) {
+            throw new com.shaanxi.zhiping.exception.BusinessException("试卷未关联任何试题，无法发布");
+        }
+
+        // 2) 批量查询大题/独立题
+        List<Long> ids = new ArrayList<>(idSet);
+        List<Question> mains = questionMapper.selectBatchIds(ids);
+        if (mains.isEmpty()) {
+            throw new com.shaanxi.zhiping.exception.BusinessException("试卷关联的试题均已删除，无法发布");
+        }
+
+        // 状态码对照
+        java.util.Map<Integer, String> statusText = new HashMap<>();
+        statusText.put(0, "草稿");
+        statusText.put(1, "待审核");
+        statusText.put(2, "已通过");
+        statusText.put(3, "已驳回");
+
+        // 3) 校验大题/独立题状态
+        List<Long> compositeIds = new ArrayList<>();
+        for (Question q : mains) {
+            if (q.getStatus() == null || q.getStatus() != 2) {
+                String st = q.getStatus() == null ? "未知" : statusText.getOrDefault(q.getStatus(), String.valueOf(q.getStatus()));
+                throw new com.shaanxi.zhiping.exception.BusinessException(
+                        "试题[" + q.getId() + "]当前状态为「" + st + "」，未通过审核，试卷无法发布");
+            }
+            if (q.getType() != null && q.getType() == 7
+                    && q.getParentId() != null && q.getParentId() == 0L) {
+                compositeIds.add(q.getId());
+            }
+        }
+
+        // 4) 查复合题子题并校验
+        if (!compositeIds.isEmpty()) {
+            List<Question> children = questionMapper.selectList(
+                    new LambdaQueryWrapper<Question>()
+                            .in(Question::getParentId, compositeIds)
+                            .orderByAsc(Question::getParentId)
+                            .orderByAsc(Question::getSort)
+                            .orderByAsc(Question::getId));
+            for (Question sub : children) {
+                if (sub.getStatus() == null || sub.getStatus() != 2) {
+                    String st = sub.getStatus() == null ? "未知" : statusText.getOrDefault(sub.getStatus(), String.valueOf(sub.getStatus()));
+                    throw new com.shaanxi.zhiping.exception.BusinessException(
+                            "复合题[" + sub.getParentId() + "]的子题[" + sub.getId() + "]当前状态为「" + st + "」，未通过审核，试卷无法发布");
+                }
+            }
+        }
     }
 
     /**
